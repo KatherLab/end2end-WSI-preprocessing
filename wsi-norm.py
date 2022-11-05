@@ -130,8 +130,6 @@ def extract_xiyuewang_features_(norm_wsi_img: PIL.Image, wsi_name: str, checkpoi
     return extract_features_(norm_wsi_img=norm_wsi_img, wsi_name=wsi_name, model=model.cuda(), outdir=outdir, model_name='xiyuewang-retcll-931956f3', **kwargs)
 
 
-from tiatoolbox.tools.stainnorm import MacenkoNormalizer
-
 if __name__ == "__main__":
     logdir = args.cache_dir/'logfile'
     logging.basicConfig(filename=logdir, force=True)
@@ -162,7 +160,7 @@ if __name__ == "__main__":
             if (slide_jpg := slide_cache_dir/'slide.jpg').exists():
                 img_norm_wsi_jpg = PIL.Image.open(slide_jpg)
             else:
-                logging.info(f"Loading {slide_name}")
+                logging.info(f"\nLoading {slide_name}")
                 try:
                     slide = openslide.OpenSlide(str(slide_url))
                 except Exception as e:
