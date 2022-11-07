@@ -1,5 +1,6 @@
+dir=/scratch/ws/0/omel987e-wsi-pipeline 
 python wsi-norm.py \
-	-o ~/omars_hdd/CACHE-A2 \
-	--wsi-dir ~/omars_hdd/TCGA-BRCA-A2 \
-	--cache-dir ~/omars_hdd/CACHE-A2 \
-	-m ~/Downloads/best_ckpt.pth
+	-o ${dir}/CACHE-E2 \
+	--wsi-dir ${dir}/TCGA-BRCA-DX-E2 \
+	--cache-dir ${dir}/CACHE-E2 \
+	-m ${dir}/best_ckpt.pth
