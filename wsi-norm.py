@@ -122,12 +122,13 @@ def extract_xiyuewang_features_(norm_wsi_img: PIL.Image, wsi_name: str, checkpoi
     assert sha256.hexdigest() == '931956f31d3f1a3f6047f3172b9e59ee3460d29f7c0c2bb219cbc8e9207795ff'
 
     model = ResNet.resnet50(num_classes=128,mlp=False, two_branch=False, normlinear=True)
-    pretext_model = torch.load(checkpoint_path)
+    #put the model on the CPU for HPC
+    pretext_model = torch.load(checkpoint_path, map_location=torch.device('cpu'))
     model.fc = nn.Identity()
     model.load_state_dict(pretext_model, strict=True)
     
     #TODO: replace slide_tile_paths with the actual tiles which are in memory
-    return extract_features_(norm_wsi_img=norm_wsi_img, wsi_name=wsi_name, model=model.cuda(), outdir=outdir, model_name='xiyuewang-retcll-931956f3', **kwargs)
+    return extract_features_(norm_wsi_img=norm_wsi_img, wsi_name=wsi_name, model=model, outdir=outdir, model_name='xiyuewang-retcll-931956f3', **kwargs) #removed model.cuda()
 
 
 if __name__ == "__main__":
@@ -136,6 +137,12 @@ if __name__ == "__main__":
     logging.getLogger().addHandler(logging.StreamHandler())
     logging.info(f'Stored logfile in {logdir}')
     #init the Macenko normaliser
+    print(f"Number of CPUs in the system: {os.cpu_count()}")
+    has_gpu=torch.cuda.is_available()
+    print(f"GPU is available: {has_gpu}")
+    if has_gpu:
+    	print(f"Number of GPUs in the system: {torch.cuda.device_count()}") 
+    print("\nInitialising Macenko normaliser...")
     target = cv2.imread('normalization_template.jpg') #TODO: make scaleable with path
     target = cv2.cvtColor(target, cv2.COLOR_BGR2RGB)
 
