@@ -275,7 +275,8 @@ def get_concentrations_source(I, stain_matrix, lamda=0.01):
         patches_shapes_list=[]
         patch_list =[]
         begin_time_list = []
-        with futures.ThreadPoolExecutor(min(32, os.cpu_count())) as executor:
+	#changed maximum threads from 32 to os.cpu_count()
+        with futures.ThreadPoolExecutor(os.cpu_count()) as executor:
             future_coords: Dict[futures.Future, int] = {}
             for i in range(I_shape[0]//patches_shape[0]):
                 for j in range(I_shape[1]//patches_shape[1]):
