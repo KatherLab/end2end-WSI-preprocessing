@@ -265,9 +265,9 @@ def get_concentrations_source(I, stain_matrix, lamda=0.01):
     if (I_shape[0] + I_shape[1]) > 8e3: #bigger than 30k edge pixels combined, i.e. 15k x 15k
         split=True
         #x = 500 # 2 for largest possible blocks
-	x=(I_shape[0]//224)*(I_shape[1]//224)
+        x=(I_shape[0]//224)*(I_shape[1]//224)
         #print(f'Splitting WSI into {x*x} for normalisation...')
-	print(f'Splitting WSI into {x} tiles for normalisation...")
+        print(f"Splitting WSI into {x} tiles for normalisation...")
         begin = time.time()
         # print("Going into RGB->OD and spams Lasso function...")
         patches_shape = (224, 224) #(I_shape[0]//x, I_shape[1]//x)
@@ -275,7 +275,7 @@ def get_concentrations_source(I, stain_matrix, lamda=0.01):
         patches_shapes_list=[]
         patch_list =[]
         begin_time_list = []
-	#changed maximum threads from 32 to os.cpu_count()
+	    #changed maximum threads from 32 to os.cpu_count()
         with futures.ThreadPoolExecutor(os.cpu_count()) as executor:
             future_coords: Dict[futures.Future, int] = {}
             for i in range(I_shape[0]//patches_shape[0]):
@@ -292,7 +292,7 @@ def get_concentrations_source(I, stain_matrix, lamda=0.01):
                     # patches_shapes_list.append(patch.shape)
         begin = time.time()
         #patch_list = np.zeros((x*x, I_shape[0]//x*I_shape[1]//x, 2), dtype=np.float64)
-	patch_list = np.zeros((x, 224*224, 2), dtype=np.float64
+        patch_list = np.zeros((x, 224*224, 2), dtype=np.float64)
         for tile_future in futures.as_completed(future_coords):
             i = future_coords[tile_future]
             print(f'Received normalised patch #{i} from thread in {time.time()-begin_time_list[i]} seconds')

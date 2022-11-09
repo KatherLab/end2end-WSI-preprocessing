@@ -141,7 +141,8 @@ if __name__ == "__main__":
     has_gpu=torch.cuda.is_available()
     print(f"GPU is available: {has_gpu}")
     if has_gpu:
-    	print(f"Number of GPUs in the system: {torch.cuda.device_count()}") 
+        print(f"Number of GPUs in the system: {torch.cuda.device_count()}")
+
     print("\nInitialising Macenko normaliser...")
     target = cv2.imread('normalization_template.jpg') #TODO: make scaleable with path
     target = cv2.cvtColor(target, cv2.COLOR_BGR2RGB)
