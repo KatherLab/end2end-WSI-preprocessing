@@ -214,7 +214,8 @@ def get_concentrations_target(I, stain_matrix, lamda=0.01):
     """
     OD = RGB_to_OD(I).reshape((-1, 3))
     try:
-        temp = spams.lasso(OD.T, D=stain_matrix.T, mode=2, lambda1=lamda, pos=True).toarray().T
+        #limited Lasso to 1 thread, instead of taking all available threads (-1 default)
+        temp = spams.lasso(OD.T, D=stain_matrix.T, mode=2, lambda1=lamda, pos=True, numThreads = 1).toarray().T
     except Exception as e:
         print(e)
         temp = None
