@@ -28,7 +28,6 @@ def canny_fcn(patch: np.array) -> Tuple[np.array, bool]:
 
     # hardcoded limit. Less or equal to 2 edges will be rejected (i.e., not saved)
     if(edge < 2.):
-        rejected +=1
         #return a black image + rejected=True
         return np.zeros_like(patch), True 
     else:
