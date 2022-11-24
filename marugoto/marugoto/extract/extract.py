@@ -141,7 +141,7 @@ def extract_features_(
                                     #repetitions=augmented_repetitions)
     #clean up memory
     del norm_wsi_img
-    s
+
     ds = ConcatDataset([unaugmented_ds, augmented_ds])
     dl = torch.utils.data.DataLoader(
         ds, batch_size=64, shuffle=False, num_workers=os.cpu_count(), drop_last=False)

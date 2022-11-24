@@ -281,9 +281,11 @@ def get_concentrations_source(I, stain_matrix, rejection_list, lamda=0.01):
             future_coords: Dict[futures.Future, int] = {}
             for i in range(I_shape[0]//patches_shape[0]):
                 for j in range(I_shape[1]//patches_shape[1]):
+                    
+                    patch = I[(i*patches_shape[0]):(i*patches_shape[0]+patches_shape[0]), (j*patches_shape[1]):(j*patches_shape[1]+patches_shape[1])]
+                    patches_shapes_list.append(patch.shape)
                     #if rejected, just skip the patch
                     if not rejection_list[2*i + j]:
-                        patch = I[(i*patches_shape[0]):(i*patches_shape[0]+patches_shape[0]), (j*patches_shape[1]):(j*patches_shape[1]+patches_shape[1])]
                         future = executor.submit(
                             get_concentrations_target, patch, stain_matrix)
                         #print(f'Submitted patch #{2*i+j} into thread...')
@@ -303,7 +305,7 @@ def get_concentrations_source(I, stain_matrix, rejection_list, lamda=0.01):
 
         end = time.time()
         print(f"\nFinished normalisation of : {end-begin}")
-        return patch_list, patches_shapes_list, len(patches_shapes_list), split
+        return patch_list, patches_shapes_list #len(patches_shapes_list)
     
     else:
         print('Normalising WSI as a whole...')
@@ -314,6 +316,6 @@ def get_concentrations_source(I, stain_matrix, rejection_list, lamda=0.01):
         end = time.time()
         print(f"Finished RGB->OD and spams Lasso function: {end-begin}")
 
-        return temp, None, None, split
+        return None #temp, None, None, split
 
 

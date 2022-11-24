@@ -101,7 +101,7 @@ class Normalizer(object):
         stain_matrix_source = get_stain_matrix(I)
         after_sm = time.time()
         print(f'Get stain matrix: {after_sm-begin}')
-        source_concentrations_list, patch_shapes, patch_n, split = ut.get_concentrations_source(I, stain_matrix_source, rejected_list)
+        source_concentrations_list, patch_shapes = ut.get_concentrations_source(I, stain_matrix_source, rejected_list)
         after_conc = time.time()
         print(f'Get concentrations: {after_conc-after_sm}')
 
@@ -122,7 +122,7 @@ class Normalizer(object):
 
             print('Reconstructing image from patches...')
             output_array = []
-            for i in range(patch_n):
+            for i in range(len(patch_shapes)):
                 patch_shape = norm_img_patches_list[i].shape
                 output_array.append(np.array(norm_img_patches_list[i]).reshape(patch_shape))
 
