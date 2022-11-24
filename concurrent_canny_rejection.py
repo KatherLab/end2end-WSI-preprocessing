@@ -74,6 +74,6 @@ def reject_background(img: np.array, patch_size: Tuple[int,int], step: int, save
 
     end = time.time()
     print(f"\nFinished Canny background rejection, rejected {np.sum(rejected_tile_list)} tiles: {end-begin}")
-    return ordered_patch_list, rejected_tile_list
+    return ordered_patch_list, rejected_tile_list, patches_shapes_list
 
 

@@ -244,7 +244,7 @@ from tqdm import tqdm
 from typing import Dict, Tuple
 import os
 
-def get_concentrations_source(I, stain_matrix, rejection_list, lamda=0.01):
+def get_concentrations_source(I, I_shape, stain_matrix, rejection_list, lamda=0.01):
     """
     Split the image I into big patches, loop over them, to OD + reshape, norm, reshape to I
     and in the end stitch the big patches together for the entire image again
@@ -260,11 +260,9 @@ def get_concentrations_source(I, stain_matrix, rejection_list, lamda=0.01):
     # patchify returns a NumPy array with shape (n_rows, n_cols, 1, H, W, N), if image is N-channels.
     # H W N is Height Width N-channels of the extracted patch
     # n_rows is the number of patches for each column and n_cols is the number of patches for each row
-    I_shape = I.shape
     print(f"Size of WSI: {I_shape}")
 
     if True: #(I_shape[0] + I_shape[1]) > (224*2): #bigger than 30k edge pixels combined, i.e. 15k x 15k
-        split=True
         #x = 500 # 2 for largest possible blocks
         x=(I_shape[0]//224)*(I_shape[1]//224)
         #print(f'Splitting WSI into {x*x} for normalisation...')
@@ -273,17 +271,15 @@ def get_concentrations_source(I, stain_matrix, rejection_list, lamda=0.01):
         # print("Going into RGB->OD and spams Lasso function...")
         patches_shape = (224, 224) #(I_shape[0]//x, I_shape[1]//x)
         # patches = []
-        patches_shapes_list=[]
+
         patch_list =[]
         begin_time_list = []
 	    #changed maximum threads from 32 to os.cpu_count()
         with futures.ThreadPoolExecutor(os.cpu_count()) as executor:
             future_coords: Dict[futures.Future, int] = {}
             for i in range(I_shape[0]//patches_shape[0]):
-                for j in range(I_shape[1]//patches_shape[1]):
-                    
-                    patch = I[(i*patches_shape[0]):(i*patches_shape[0]+patches_shape[0]), (j*patches_shape[1]):(j*patches_shape[1]+patches_shape[1])]
-                    patches_shapes_list.append(patch.shape)
+                for j in range(I_shape[1]//patches_shape[1]):          
+                    patch = I[2*i + j] #I[(i*patches_shape[0]):(i*patches_shape[0]+patches_shape[0]), (j*patches_shape[1]):(j*patches_shape[1]+patches_shape[1])]
                     #if rejected, just skip the patch
                     if not rejection_list[2*i + j]:
                         future = executor.submit(
@@ -305,7 +301,7 @@ def get_concentrations_source(I, stain_matrix, rejection_list, lamda=0.01):
 
         end = time.time()
         print(f"\nFinished normalisation of : {end-begin}")
-        return patch_list, patches_shapes_list #len(patches_shapes_list)
+        return patch_list #len(patches_shapes_list)
     
     else:
         print('Normalising WSI as a whole...')
