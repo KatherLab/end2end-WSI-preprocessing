@@ -93,7 +93,7 @@ class Normalizer(object):
         return ut.OD_to_RGB(self.stain_matrix_target)
 
 
-    def transform(self, I):
+    def transform(self, I: np.array, rejected_list: np.array): #TODO
         begin = time.time()
         I = ut.standardize_brightness(I)
         after_sb = time.time()
@@ -101,14 +101,15 @@ class Normalizer(object):
         stain_matrix_source = get_stain_matrix(I)
         after_sm = time.time()
         print(f'Get stain matrix: {after_sm-begin}')
-        source_concentrations_list, patch_shapes, patch_n, split = ut.get_concentrations_source(I, stain_matrix_source)
+        source_concentrations_list, patch_shapes, patch_n, split = ut.get_concentrations_source(I, stain_matrix_source, rejected_list)
         after_conc = time.time()
         print(f'Get concentrations: {after_conc-after_sm}')
 
         I_shape = I.shape
         del I
         del stain_matrix_source
-        #breakpoint()
+
+        split=True
         if split:
             norm_img_patches_list  = []
             for i, source_concentrations in enumerate(source_concentrations_list):

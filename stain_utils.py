@@ -244,7 +244,7 @@ from tqdm import tqdm
 from typing import Dict, Tuple
 import os
 
-def get_concentrations_source(I, stain_matrix, lamda=0.01):
+def get_concentrations_source(I, stain_matrix, rejection_list, lamda=0.01):
     """
     Split the image I into big patches, loop over them, to OD + reshape, norm, reshape to I
     and in the end stitch the big patches together for the entire image again
@@ -263,7 +263,7 @@ def get_concentrations_source(I, stain_matrix, lamda=0.01):
     I_shape = I.shape
     print(f"Size of WSI: {I_shape}")
 
-    if (I_shape[0] + I_shape[1]) > 8e3: #bigger than 30k edge pixels combined, i.e. 15k x 15k
+    if True: #(I_shape[0] + I_shape[1]) > (224*2): #bigger than 30k edge pixels combined, i.e. 15k x 15k
         split=True
         #x = 500 # 2 for largest possible blocks
         x=(I_shape[0]//224)*(I_shape[1]//224)
@@ -281,70 +281,28 @@ def get_concentrations_source(I, stain_matrix, lamda=0.01):
             future_coords: Dict[futures.Future, int] = {}
             for i in range(I_shape[0]//patches_shape[0]):
                 for j in range(I_shape[1]//patches_shape[1]):
-                    patch = I[(i*patches_shape[0]):(i*patches_shape[0]+patches_shape[0]), (j*patches_shape[1]):(j*patches_shape[1]+patches_shape[1])]
-                    patches_shapes_list.append(patch.shape) #TODO: Reorder this before returning it out of this fcn
-                    future = executor.submit(
-                        get_concentrations_target, patch, stain_matrix)
-                    #print(f'Submitted patch #{2*i+j} into thread...')
-                    begin_time_list.append(time.time())
-                    future_coords[future] = 2*i + j # index 0 - 3. (0,0) = 0, (0,1) = 1, (1,0) = 2, (1,1) = 3
-                    #print(2*i + j)
-                    # patches.append(patch)
-                    # patches_shapes_list.append(patch.shape)
+                    #if rejected, just skip the patch
+                    if not rejection_list[2*i + j]:
+                        patch = I[(i*patches_shape[0]):(i*patches_shape[0]+patches_shape[0]), (j*patches_shape[1]):(j*patches_shape[1]+patches_shape[1])]
+                        future = executor.submit(
+                            get_concentrations_target, patch, stain_matrix)
+                        #print(f'Submitted patch #{2*i+j} into thread...')
+                        begin_time_list.append(time.time())
+                        future_coords[future] = 2*i + j # index 0 - 3. (0,0) = 0, (0,1) = 1, (1,0) = 2, (1,1) = 3
+
         begin = time.time()
         #patch_list = np.zeros((x*x, I_shape[0]//x*I_shape[1]//x, 2), dtype=np.float64)
         patch_list = np.zeros((x, 224*224, 2), dtype=np.float64)
         for tile_future in futures.as_completed(future_coords):
             i = future_coords[tile_future]
-            print(f'Received normalised patch #{i} from thread in {time.time()-begin_time_list[i]} seconds')
+            #print(f'Received normalised patch #{i} from thread in {time.time()-begin_time_list[i]} seconds')
             patch = tile_future.result()
-            # patch_list.append(patch)
-            # # idx_list.append((i,j))
-            # # print(i,j)
-            # a = I_shape[0]//x * i
-            # b = I_shape[1]//x * j
             patch_list[i] = patch
         
-        # patches = np.array(patches)
-        #breakpoint()
-
         del I
 
-        
-        #TODO: Enable multithreading for each tile in the normalisation
-        # with futures.ThreadPoolExecutor(min(32, os.cpu_count())) as executor:
-        #     future_coords: Dict[futures.Future, Tuple[int, int]] = {}
-        #     for i in range(x*x):
-        #         patch = patches[i]
-        #         future = executor.submit(
-        #             get_concentrations_target, patch, stain_matrix)
-        #         future_coords[future] = (i,j)
-
-        # for tile_future in tqdm(futures.as_completed(future_coords), total=x*x, desc=f'Normalising {x*x} WSI tiles', leave=False):
-        #     i, j = future_coords[tile_future]
-        #     patch = tile_future.result()
-        #     patch_list.append(patch)
-        #     idx_list.append((i,j))
-
-
-        # idx_list_1d = []
-        # for idx in idx_list:
-        #     if idx == (0,0):
-        #         idx_list_1d.append(0)
-        #     elif idx == (0,1):
-        #         idx_list_1d.append(1)
-        #     elif idx == (1,0):
-        #         idx_list_1d.append(2)
-        #     elif idx == (1,1):
-        #         idx_list_1d.append(3)           
-
-        # patch_list = np.array(patch_list)
-        # patch_list = patch_list[np.array(idx_list_1d)] #(1, 0, 2, 3)
-        # patchshape_list = np.array(patchshape_list)
-        # patchshape_list = patchshape_list[idx_list]
-
         end = time.time()
-        print(f"\nFinished RGB->OD and spams Lasso function: {end-begin}")
+        print(f"\nFinished normalisation of : {end-begin}")
         return patch_list, patches_shapes_list, len(patches_shapes_list), split
     
     else:
