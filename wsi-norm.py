@@ -192,12 +192,13 @@ if __name__ == "__main__":
 
                 #########################
                 #Do edge detection here and reject unnecessary tiles BEFORE normalisation
-                bg_reject_array, rejected_tile_array, patch_shapes = reject_background(img = slide_array, patch_size=(224,224), step=224, save_tiles=False)
+                bg_reject_array, rejected_tile_array, patch_shapes = reject_background(img = slide_array, patch_size=(224,224), step=224, outdir=args.cache_dir, save_tiles=False)
 
                 logging.info(f"Normalising {slide_name}...")
                 #measure time performance
                 start_time = time.time()
                 #pass raw slide_array for getting the initial concentrations, bg_reject_array for actual normalisation
+
                 canny_img, img_norm_wsi_jpg, img_norm_wsi_list, coords_list = normalizer.transform(slide_array, bg_reject_array, rejected_tile_array, patch_shapes)
                 
                 print("Saving Canny background rejected image...")

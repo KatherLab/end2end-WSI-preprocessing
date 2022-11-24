@@ -267,7 +267,6 @@ def get_concentrations_source(I, I_shape, stain_matrix, rejection_list, lamda=0.
         x=(I_shape[0]//224)*(I_shape[1]//224)
         #print(f'Splitting WSI into {x*x} for normalisation...')
         print(f"Normalising {np.sum(~rejection_list)} tiles...")
-        begin = time.time()
         # print("Going into RGB->OD and spams Lasso function...")
         patches_shape = (224, 224) #(I_shape[0]//x, I_shape[1]//x)
         # patches = []
@@ -290,19 +289,16 @@ def get_concentrations_source(I, I_shape, stain_matrix, rejection_list, lamda=0.
                         begin_time_list.append(time.time())
                         future_coords[future] = i*len(j_range) + j # index 0 - 3. (0,0) = 0, (0,1) = 1, (1,0) = 2, (1,1) = 3
 
-        begin = time.time()
-        #patch_list = np.zeros((x*x, I_shape[0]//x*I_shape[1]//x, 2), dtype=np.float64)
-        patch_list = np.zeros((x, 224*224, 2), dtype=np.float64)
-        for tile_future in futures.as_completed(future_coords):
-            i = future_coords[tile_future]
-            #print(f'Received normalised patch #{i} from thread in {time.time()-begin_time_list[i]} seconds')
-            patch = tile_future.result()
-            patch_list[i] = patch
+            #patch_list = np.zeros((x*x, I_shape[0]//x*I_shape[1]//x, 2), dtype=np.float64)
+            patch_list = np.zeros((x, 224*224, 2), dtype=np.float64)
+            for tile_future in tqdm(futures.as_completed(future_coords), total=np.sum(~rejection_list), desc='Normalising tiles', leave=False):
+                i = future_coords[tile_future]
+                #print(f'Received normalised patch #{i} from thread in {time.time()-begin_time_list[i]} seconds')
+                patch = tile_future.result()
+                patch_list[i] = patch
         
         del I
 
-        end = time.time()
-        print(f"\nFinished normalisation: {end-begin}")
         return patch_list #len(patches_shapes_list)
     
     else:

@@ -37,14 +37,13 @@ def canny_fcn(patch: np.array) -> Tuple[np.array, bool]:
 
 def reject_background(img: np.array, patch_size: Tuple[int,int], step: int, save_tiles: bool = False, outdir: Path = None) -> Tuple[np.array, list, int, bool]:
     img_shape = img.shape
-    print(f"Size of WSI: {img_shape}")
+    print(f"\nSize of WSI: {img_shape}")
 
     split=True
     x=(img_shape[0]//patch_size[0])*(img_shape[1]//patch_size[1])
 
     print(f"Splitting WSI into {x} tiles and Canny background rejection...")
     begin = time.time()
-    breakpoint()
     patches_shapes_list=[]
     # begin_time_list = []
     #changed maximum threads from 32 to os.cpu_count()
@@ -61,20 +60,21 @@ def reject_background(img: np.array, patch_size: Tuple[int,int], step: int, save
                 # begin_time_list.append(time.time())
                 future_coords[future] = i*len(j_range) + j # index 0 - 3. (0,0) = 0, (0,1) = 1, (1,0) = 2, (1,1) = 3
 
-    del img
-    
-    begin = time.time()
-    #num of patches x 224 x 224 x 3 for RGB patches
-    ordered_patch_list = np.zeros((x, patch_size[0], patch_size[1], 3), dtype=np.uint8)
-    rejected_tile_list = np.zeros(x, dtype=bool)
-    for tile_future in futures.as_completed(future_coords):
-        i = future_coords[tile_future]
-        #print(f'Received normalised patch #{i} from thread in {time.time()-begin_time_list[i]} seconds')
-        patch, is_rejected = tile_future.result()
-        ordered_patch_list[i] = patch
-        rejected_tile_list[i] = is_rejected
+        del img
+        
+        begin = time.time()
+        #num of patches x 224 x 224 x 3 for RGB patches
+        ordered_patch_list = np.zeros((x, patch_size[0], patch_size[1], 3), dtype=np.uint8)
+        rejected_tile_list = np.zeros(x, dtype=bool)
+        for tile_future in futures.as_completed(future_coords):
+            i = future_coords[tile_future]
+            #print(f'Received normalised patch #{i} from thread in {time.time()-begin_time_list[i]} seconds')
+            patch, is_rejected = tile_future.result()
+            ordered_patch_list[i] = patch
+            rejected_tile_list[i] = is_rejected
 
-    end = time.time()
+        end = time.time()
+
     print(f"\nFinished Canny background rejection, rejected {np.sum(rejected_tile_list)} tiles: {end-begin}")
     return ordered_patch_list, rejected_tile_list, patches_shapes_list
 

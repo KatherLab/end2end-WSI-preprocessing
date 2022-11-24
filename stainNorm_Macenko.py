@@ -104,7 +104,7 @@ class Normalizer(object):
         I_shape = I.shape
         source_concentrations_list = ut.get_concentrations_source(bg_rejected_img, I_shape, stain_matrix_source, rejected_list)
         after_conc = time.time()
-        print(f'Get concentrations: {after_conc-after_sm}')
+        print(f'\nGet concentrations (normalisation): {after_conc-after_sm}')
 
         del I, stain_matrix_source, rejected_list
 
