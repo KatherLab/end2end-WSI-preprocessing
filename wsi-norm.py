@@ -199,7 +199,9 @@ if __name__ == "__main__":
                 start_time = time.time()
                 #pass raw slide_array for getting the initial concentrations, bg_reject_array for actual normalisation
                 canny_img, img_norm_wsi_jpg, img_norm_wsi_list, coords_list = normalizer.transform(slide_array, bg_reject_array, rejected_tile_array, patch_shapes)
-                (Image.fromarray(canny_img)).save(f'{slide_cache_dir}/canny_slide.jpg')
+                
+                print("Saving Canny background rejected image...")
+                canny_img.save(f'{slide_cache_dir}/canny_slide.jpg')
                 # norm_wsi_jpg = norm.transform(np.array(slide_array))
                 
                 #remove original slide jpg from memory
