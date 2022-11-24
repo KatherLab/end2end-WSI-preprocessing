@@ -106,7 +106,7 @@ class Normalizer(object):
         after_conc = time.time()
         print(f'Get concentrations: {after_conc-after_sm}')
 
-        del I, stain_matrix_source, bg_rejected_img, rejected_list
+        del I, stain_matrix_source, rejected_list
 
         split=True
         if split:
