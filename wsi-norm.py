@@ -106,7 +106,7 @@ from PIL import Image
 
 # %%
 
-def extract_xiyuewang_features_(norm_wsi_img: PIL.Image, wsi_name: str, checkpoint_path: str, outdir: Path, **kwargs):
+def extract_xiyuewang_features_(norm_wsi_img: PIL.Image, wsi_name: str, coords: list, checkpoint_path: str, outdir: Path, **kwargs):
     """Extracts features from slide tiles.
     Args:
         checkpoint_path:  Path to the model checkpoint file.  Can be downloaded
@@ -130,7 +130,7 @@ def extract_xiyuewang_features_(norm_wsi_img: PIL.Image, wsi_name: str, checkpoi
     model.load_state_dict(pretext_model, strict=True)
     
     #TODO: replace slide_tile_paths with the actual tiles which are in memory
-    return extract_features_(norm_wsi_img=norm_wsi_img, wsi_name=wsi_name, model=model, outdir=outdir, model_name='xiyuewang-retcll-931956f3', **kwargs) #removed model.cuda()
+    return extract_features_(norm_wsi_img=norm_wsi_img, wsi_name=wsi_name, coords=coords, model=model, outdir=outdir, model_name='xiyuewang-retcll-931956f3', **kwargs) #removed model.cuda()
 
 
 if __name__ == "__main__":
@@ -198,7 +198,7 @@ if __name__ == "__main__":
                 logging.info(f"Normalising {slide_name}...")
                 #measure time performance
                 start_time = time.time()
-                img_norm_wsi_jpg = normalizer.transform(bg_reject_array, rejected_tile_array)
+                img_norm_wsi_jpg, img_norm_wsi_list, coords_list = normalizer.transform(bg_reject_array, rejected_tile_array)
                 # norm_wsi_jpg = norm.transform(np.array(slide_array))
                 
                 #remove original slide jpg from memory
@@ -214,7 +214,7 @@ if __name__ == "__main__":
             #FEATURE EXTRACTION
             #measure time performance
             start_time = time.time()
-            extract_xiyuewang_features_(norm_wsi_img=np.asarray(img_norm_wsi_jpg), wsi_name=slide_name, checkpoint_path=args.model, outdir=slide_cache_dir)
+            extract_xiyuewang_features_(norm_wsi_img=np.asarray(img_norm_wsi_list), wsi_name=slide_name, coords=coords_list, checkpoint_path=args.model, outdir=slide_cache_dir)
             logging.info("\n--- Extracted features from slide: %s seconds ---" % (time.time() - start_time))
             #########################
         else:
