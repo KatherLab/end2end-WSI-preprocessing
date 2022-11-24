@@ -260,13 +260,13 @@ def get_concentrations_source(I, I_shape, stain_matrix, rejection_list, lamda=0.
     # patchify returns a NumPy array with shape (n_rows, n_cols, 1, H, W, N), if image is N-channels.
     # H W N is Height Width N-channels of the extracted patch
     # n_rows is the number of patches for each column and n_cols is the number of patches for each row
-    print(f"Size of WSI: {I_shape}")
+    print(f"\nSize of WSI: {I_shape}")
 
     if True: #(I_shape[0] + I_shape[1]) > (224*2): #bigger than 30k edge pixels combined, i.e. 15k x 15k
         #x = 500 # 2 for largest possible blocks
         x=(I_shape[0]//224)*(I_shape[1]//224)
         #print(f'Splitting WSI into {x*x} for normalisation...')
-        print(f"Splitting WSI into {x} tiles for normalisation...")
+        print(f"Normalising {np.sum(~rejection_list)} tiles...")
         begin = time.time()
         # print("Going into RGB->OD and spams Lasso function...")
         patches_shape = (224, 224) #(I_shape[0]//x, I_shape[1]//x)
@@ -300,7 +300,7 @@ def get_concentrations_source(I, I_shape, stain_matrix, rejection_list, lamda=0.
         del I
 
         end = time.time()
-        print(f"\nFinished normalisation of : {end-begin}")
+        print(f"\nFinished normalisation: {end-begin}")
         return patch_list #len(patches_shapes_list)
     
     else:

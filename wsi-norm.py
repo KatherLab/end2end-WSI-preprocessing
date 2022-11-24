@@ -198,7 +198,8 @@ if __name__ == "__main__":
                 #measure time performance
                 start_time = time.time()
                 #pass raw slide_array for getting the initial concentrations, bg_reject_array for actual normalisation
-                img_norm_wsi_jpg, img_norm_wsi_list, coords_list = normalizer.transform(slide_array, bg_reject_array, rejected_tile_array, patch_shapes)
+                canny_img, img_norm_wsi_jpg, img_norm_wsi_list, coords_list = normalizer.transform(slide_array, bg_reject_array, rejected_tile_array, patch_shapes)
+                (Image.fromarray(canny_img)).save(f'{slide_cache_dir}/canny_slide.jpg')
                 # norm_wsi_jpg = norm.transform(np.array(slide_array))
                 
                 #remove original slide jpg from memory
