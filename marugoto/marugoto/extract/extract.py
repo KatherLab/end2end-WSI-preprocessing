@@ -122,47 +122,6 @@ def extract_features_(
         json.dump({'extractor': extractor_string,
                   'augmented_repetitions': augmented_repetitions}, f)
 
-    # patchify returns a NumPy array with shape (n_rows, n_cols, 1, H, W, N), if image is N-channels.
-    # H W N is Height Width N-channels of the extracted patch
-    # n_rows is the number of patches for each column and n_cols is the number of patches for each row
-    patches = patchify(norm_wsi_img, (224, 224, 3), step=224) #no overlap
-    #TODO: make scaleable with selecting the target size and overlap of px
-    
-    patch_list = []
-    rejected = 0
-    for i in range(patches.shape[0]):
-        for j in range(patches.shape[1]):
-
-            patch = patches[i, j, 0, :, :, :]
-            patch_img = PIL.Image.fromarray(patch)
-            tile_to_greyscale = patch_img.convert('L')
-        # tile_to_greyscale is an PIL.Image.Image with image mode L
-        # Note: If you have an L mode image, that means it is
-        # a single channel image - normally interpreted as greyscale.
-        # The L means that is just stores the Luminance.
-        # It is very compact, but only stores a greyscale, not colour.
-
-            tile2array = np.array(tile_to_greyscale)
-
-        # hardcoded thresholds
-            edge = cv2.Canny(tile2array, 40, 100)
-
-        # avoid dividing by zero
-            edge = (edge / np.max(edge) if np.max(edge) != 0 else 0)
-            edge = (((np.sum(np.sum(edge)) / (tile2array.shape[0]*tile2array.shape[1])) * 100)
-                if (tile2array.shape[0]*tile2array.shape[1]) != 0 else 0)
-
-        # hardcoded limit. Less or equal to 2 edges will be rejected (i.e., not saved)
-            if(edge < 2.):
-                rejected +=1 
-            else:
-                patch_list.append(patch)
-                #TODO: optional saving the tile
-                #(PIL.Image.fromarray(patch)).save(f'{outdir}/patches/{i}_{j}.jpg')
-
-    print(f'From {patches.shape[0]*patches.shape[1]} patches, {rejected} were rejected by Canny edge detection.')
-    patch_list = np.array(patch_list)
-
     
     # for slide_tile_path in tqdm(slide_tile_paths):
     #     slide_tile_path = Path(slide_tile_path)
@@ -177,11 +136,12 @@ def extract_features_(
     # Everything below was indented 1 tab in the for 
     #TODO: create dataset which contains the tiles instead of only the paths?
 
-    unaugmented_ds = SlideTileDataset(patch_list, normal_transform)
+    unaugmented_ds = SlideTileDataset(norm_wsi_img, normal_transform)
     augmented_ds = [] #SlideTileDataset(patch_list, augmenting_transform,
                                     #repetitions=augmented_repetitions)
     #clean up memory
-    del patch_list
+    del norm_wsi_img
+    s
     ds = ConcatDataset([unaugmented_ds, augmented_ds])
     dl = torch.utils.data.DataLoader(
         ds, batch_size=64, shuffle=False, num_workers=os.cpu_count(), drop_last=False)
