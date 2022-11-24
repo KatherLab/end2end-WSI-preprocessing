@@ -128,6 +128,9 @@ def extract_xiyuewang_features_(norm_wsi_img: PIL.Image, wsi_name: str, coords: 
     pretext_model = torch.load(checkpoint_path, map_location=torch.device('cpu'))
     model.fc = nn.Identity()
     model.load_state_dict(pretext_model, strict=True)
+
+    if torch.cuda.is_available():
+        model=model.cuda()
     
     #TODO: replace slide_tile_paths with the actual tiles which are in memory
     return extract_features_(norm_wsi_img=norm_wsi_img, wsi_name=wsi_name, coords=coords, model=model, outdir=outdir, model_name='xiyuewang-retcll-931956f3', **kwargs) #removed model.cuda()
