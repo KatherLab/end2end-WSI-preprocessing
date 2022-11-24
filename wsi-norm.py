@@ -101,6 +101,8 @@ import torch
 import torch.nn as nn
 from marugoto.marugoto.extract.extract import extract_features_
 from marugoto.marugoto.extract.xiyue_wang.RetCLL import ResNet
+from .concurrent_canny_rejection import reject_background
+from PIL import Image
 
 # %%
 
@@ -165,7 +167,7 @@ if __name__ == "__main__":
         # print((os.path.exists((f'{args.cache_dir}/{slide_name}.h5'))))
         if not (os.path.exists((f'{args.cache_dir}/{slide_name}.h5'))):
             # Load WSI as one image
-            if (slide_jpg := slide_cache_dir/'slide.jpg').exists():
+            if (slide_jpg := slide_cache_dir/'norm_slide.jpg').exists():
                 img_norm_wsi_jpg = PIL.Image.open(slide_jpg)
             else:
                 logging.info(f"\nLoading {slide_name}")
@@ -178,7 +180,9 @@ if __name__ == "__main__":
                 #measure time performance
                 start_time = time.time()
                 slide_array = load_slide(slide)
-                # print(slide_array.dtype)
+
+                #save raw .svs jpg
+                (Image.fromarray(slide_array)).save(f'{slide_cache_dir}/slide.jpg')
 
                 #remove .SVS from memory (couple GB)
                 del slide
@@ -186,17 +190,21 @@ if __name__ == "__main__":
                 logging.info("\n--- Loaded slide: %s seconds ---" % (time.time() - start_time))
                 #########################
 
-                logging.info(f"Normalising {slide_name}")
+                #########################
+                #Do edge detection here and reject unnecessary tiles BEFORE normalisation
+                bg_reject_array, rejected_tile_array = reject_background(img = slide_array, patch_size=(224,224), step=224, save_tiles=False)
+                del slide_array
+
+                logging.info(f"Normalising {slide_name}...")
                 #measure time performance
                 start_time = time.time()
-                img_norm_wsi_jpg = normalizer.transform(np.array(slide_array))
+                img_norm_wsi_jpg = normalizer.transform(bg_reject_array, rejected_tile_array)
                 # norm_wsi_jpg = norm.transform(np.array(slide_array))
-
                 
                 #remove original slide jpg from memory
                 del slide_array
 
-                logging.info("\n--- Normalised slide: %s seconds ---" % (time.time() - start_time))
+                logging.info(f"\n--- Normalised slide {slide_name}: {(time.time() - start_time)} seconds ---")
                 #########################
 
                 # img_norm_wsi_jpg = PIL.Image.fromarray(norm_wsi_jpg)
