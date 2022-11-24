@@ -277,16 +277,18 @@ def get_concentrations_source(I, I_shape, stain_matrix, rejection_list, lamda=0.
 	    #changed maximum threads from 32 to os.cpu_count()
         with futures.ThreadPoolExecutor(os.cpu_count()) as executor:
             future_coords: Dict[futures.Future, int] = {}
-            for i in range(I_shape[0]//patches_shape[0]):
-                for j in range(I_shape[1]//patches_shape[1]):          
-                    patch = I[2*i + j] #I[(i*patches_shape[0]):(i*patches_shape[0]+patches_shape[0]), (j*patches_shape[1]):(j*patches_shape[1]+patches_shape[1])]
+            i_range = range(I_shape[0]//patches_shape[0])
+            j_range = range(I_shape[1]//patches_shape[1])
+            for i in i_range:
+                for j in j_range:          
+                    patch = I[i*len(j_range) + j] #I[(i*patches_shape[0]):(i*patches_shape[0]+patches_shape[0]), (j*patches_shape[1]):(j*patches_shape[1]+patches_shape[1])]
                     #if rejected, just skip the patch
-                    if not rejection_list[2*i + j]:
+                    if not rejection_list[i*len(j_range) + j]:
                         future = executor.submit(
                             get_concentrations_target, patch, stain_matrix)
                         #print(f'Submitted patch #{2*i+j} into thread...')
                         begin_time_list.append(time.time())
-                        future_coords[future] = 2*i + j # index 0 - 3. (0,0) = 0, (0,1) = 1, (1,0) = 2, (1,1) = 3
+                        future_coords[future] = i*len(j_range) + j # index 0 - 3. (0,0) = 0, (0,1) = 1, (1,0) = 2, (1,1) = 3
 
         begin = time.time()
         #patch_list = np.zeros((x*x, I_shape[0]//x*I_shape[1]//x, 2), dtype=np.float64)
