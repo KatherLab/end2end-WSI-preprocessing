@@ -65,19 +65,16 @@ def reject_background(img: np.array, patch_size: Tuple[int,int], step: int, save
     #num of patches x 224 x 224 x 3 for RGB patches
     ordered_patch_list = np.zeros((x, patch_size[0], patch_size[1], 3), dtype=np.uint8)
     rejected_tile_list = np.zeros(x, dtype=bool)
-    n_rejected=0
     for tile_future in futures.as_completed(future_coords):
         i = future_coords[tile_future]
         #print(f'Received normalised patch #{i} from thread in {time.time()-begin_time_list[i]} seconds')
         patch, is_rejected = tile_future.result()
         ordered_patch_list[i] = patch
         rejected_tile_list[i] = is_rejected
-        if is_rejected:
-            n_rejected+=1
     
 
     end = time.time()
-    print(f"\nFinished Canny background rejection, rejected {n_rejected} tiles: {end-begin}")
+    print(f"\nFinished Canny background rejection, rejected {np.sum(rejected_tile_list)} tiles: {end-begin}")
     return ordered_patch_list, rejected_tile_list
 
 
