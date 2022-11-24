@@ -121,17 +121,17 @@ class Normalizer(object):
             print(f'Concentrations x Stain matrix: {after_transform-after_conc}')
 
             print('Reconstructing image from patches...')
-            output = []
+            output_array = []
             for i in range(patch_n):
                 patch_shape = norm_img_patches_list[i].shape
-                output.append(np.array(norm_img_patches_list[i]).reshape(patch_shape))
+                output_array.append(np.array(norm_img_patches_list[i]).reshape(patch_shape))
 
             output_img = Image.new("RGB", (I_shape[1], I_shape[0]))
             idx = 0
             # breakpoint()
             for i in range(I_shape[0]//patch_shapes[0][0]):
                 for j in range(I_shape[1]//patch_shapes[0][1]):
-                    output_img.paste(Image.fromarray(np.array(output[idx])), (j*patch_shapes[idx][1], 
+                    output_img.paste(Image.fromarray(np.array(output_array[idx])), (j*patch_shapes[idx][1], 
                                                                                 i*patch_shapes[idx][0], 
                                                                                 j*patch_shapes[idx][1]+patch_shapes[idx][1], 
                                                                                 i*patch_shapes[idx][0]+patch_shapes[idx][0]))
@@ -154,8 +154,9 @@ class Normalizer(object):
             after_transform = time.time()
             print(f'Concentrations x Stain matrix: {after_transform-after_conc}')
             output_img = Image.fromarray(np.array(jit_output))
+            output_array = jit_output
 
-        return output_img
+        return output_img, output_array
 
 
     def hematoxylin(self, I):
