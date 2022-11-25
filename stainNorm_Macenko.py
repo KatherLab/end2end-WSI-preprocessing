@@ -106,7 +106,7 @@ class Normalizer(object):
         after_conc = time.time()
         print(f'\nGet concentrations (normalisation): {after_conc-after_sm}')
 
-        del I, stain_matrix_source, rejected_list
+        del I, stain_matrix_source
 
         split=True
         if split:
@@ -120,19 +120,24 @@ class Normalizer(object):
             print(f'Concentrations x Stain matrix: {after_transform-after_conc}')
 
             print('Reconstructing image from patches...')
-            output_array = []
+            norm_output_array = []
+            canny_output_array = []
             for i in range(len(patch_shapes)):
                 patch_shape = norm_img_patches_list[i].shape
-                output_array.append(np.array(norm_img_patches_list[i]).reshape(patch_shape))
+                norm_output_array.append(np.array(norm_img_patches_list[i]).reshape(patch_shape))
+                if not rejected_list[i]:
+                    canny_output_array.append(np.array(norm_img_patches_list[i]).reshape(patch_shape))
 
             output_img = Image.new("RGB", (I_shape[1], I_shape[0]))
             canny_img = Image.new("RGB", (I_shape[1], I_shape[0]))
-            idx = 0
-            # breakpoint()
+
             coords_list=[]
-            for i in range(I_shape[0]//patch_shapes[0][0]):
-                for j in range(I_shape[1]//patch_shapes[0][1]):
-                    output_img.paste(Image.fromarray(np.array(output_array[idx])), (j*patch_shapes[idx][1], 
+            i_range = range(I_shape[0]//patch_shapes[0][0])
+            j_range = range(I_shape[1]//patch_shapes[0][1])
+            for i in i_range:
+                for j in j_range:
+                    idx = i*len(j_range) + j
+                    output_img.paste(Image.fromarray(np.array(norm_output_array[idx])), (j*patch_shapes[idx][1], 
                                                                                 i*patch_shapes[idx][0], 
                                                                                 j*patch_shapes[idx][1]+patch_shapes[idx][1], 
                                                                                 i*patch_shapes[idx][0]+patch_shapes[idx][0]))
@@ -144,8 +149,8 @@ class Normalizer(object):
                     #                                                             i*patch_shapes[idx][0], 
                     #                                                             j*patch_shapes[idx][1]+patch_shapes[idx][1], 
                     #                                                             i*patch_shapes[idx][0]+patch_shapes[idx][0]))
-                    coords_list.append((j*patch_shapes[idx][1], i*patch_shapes[idx][0]))
-                    idx += 1
+                    if not rejected_list[idx]:
+                        coords_list.append((j*patch_shapes[idx][1], i*patch_shapes[idx][0]))
 
 
             #output_img = np.uint8(reconstruct_from_patches_2d(np.array(output), I_shape))
@@ -163,7 +168,7 @@ class Normalizer(object):
             output_array = jit_output
             coords_list = None #TODO
 
-        return canny_img, output_img, output_array, coords_list
+        return canny_img, output_img, canny_output_array, coords_list
 
 
     def hematoxylin(self, I):

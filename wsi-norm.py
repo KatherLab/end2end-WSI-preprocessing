@@ -201,7 +201,7 @@ if __name__ == "__main__":
                 start_time = time.time()
                 #pass raw slide_array for getting the initial concentrations, bg_reject_array for actual normalisation
 
-                canny_img, img_norm_wsi_jpg, img_norm_wsi_list, coords_list = normalizer.transform(slide_array, bg_reject_array, rejected_tile_array, patch_shapes)
+                canny_img, img_norm_wsi_jpg, canny_norm_patch_list, coords_list = normalizer.transform(slide_array, bg_reject_array, rejected_tile_array, patch_shapes)
                 
                 print("Saving Canny background rejected image...")
                 canny_img.save(f'{slide_cache_dir}/canny_slide.jpg')
@@ -220,7 +220,7 @@ if __name__ == "__main__":
             #FEATURE EXTRACTION
             #measure time performance
             start_time = time.time()
-            extract_xiyuewang_features_(norm_wsi_img=np.asarray(img_norm_wsi_list), wsi_name=slide_name, coords=coords_list, checkpoint_path=args.model, outdir=slide_cache_dir)
+            extract_xiyuewang_features_(norm_wsi_img=np.asarray(canny_norm_patch_list), wsi_name=slide_name, coords=coords_list, checkpoint_path=args.model, outdir=slide_cache_dir)
             print("\n--- Extracted features from slide: %s seconds ---" % (time.time() - start_time))
             #########################
         else:
