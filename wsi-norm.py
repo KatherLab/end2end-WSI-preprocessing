@@ -183,14 +183,13 @@ if __name__ == "__main__":
                 #measure time performance
                 start_time = time.time()
                 slide_array = load_slide(slide)
-
                 #save raw .svs jpg
                 (Image.fromarray(slide_array)).save(f'{slide_cache_dir}/slide.jpg')
 
                 #remove .SVS from memory (couple GB)
                 del slide
                 
-                logging.info("\n--- Loaded slide: %s seconds ---" % (time.time() - start_time))
+                print("\n--- Loaded slide: %s seconds ---" % (time.time() - start_time))
                 #########################
 
                 #########################
@@ -211,20 +210,20 @@ if __name__ == "__main__":
                 #remove original slide jpg from memory
                 del slide_array
 
-                logging.info(f"\n--- Normalised slide {slide_name}: {(time.time() - start_time)} seconds ---")
+                print(f"\n--- Normalised slide {slide_name}: {(time.time() - start_time)} seconds ---")
                 #########################
 
                 # img_norm_wsi_jpg = PIL.Image.fromarray(norm_wsi_jpg)
                 img_norm_wsi_jpg.save(slide_jpg) #save WSI.svs -> WSI.jpg
 
-            logging.info(f"Extracting xiyue-wang macenko features from {slide_name}")
+            print(f"Extracting xiyue-wang macenko features from {slide_name}")
             #FEATURE EXTRACTION
             #measure time performance
             start_time = time.time()
             extract_xiyuewang_features_(norm_wsi_img=np.asarray(img_norm_wsi_list), wsi_name=slide_name, coords=coords_list, checkpoint_path=args.model, outdir=slide_cache_dir)
-            logging.info("\n--- Extracted features from slide: %s seconds ---" % (time.time() - start_time))
+            print("\n--- Extracted features from slide: %s seconds ---" % (time.time() - start_time))
             #########################
         else:
-            logging.info(f"{slide_name}.h5 already exists. Skipping...")
+            print(f"{slide_name}.h5 already exists. Skipping...")
 
-    logging.info(f"--- End-to-end processing time of {len(svs_dir)} slides: {str(timedelta(seconds=(time.time() - total_start_time)))} ---")
+    print(f"--- End-to-end processing time of {len(svs_dir)} slides: {str(timedelta(seconds=(time.time() - total_start_time)))} ---")
