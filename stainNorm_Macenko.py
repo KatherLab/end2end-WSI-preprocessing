@@ -16,7 +16,9 @@ import numpy as np
 import stain_utils as ut
 from numba import njit
 import time
-from patchify import patchify, unpatchify
+from concurrent import futures
+from tqdm import tqdm
+from typing import Dict, Tuple
 
 @njit
 def v1v2_mult(V, minPhi, maxPhi):
@@ -72,6 +74,12 @@ def hematoxalin_return(source_concentrations, h, w):
     H = np.exp(-1 * H)
     return H
 
+def concurrent_concXstain(self, source_concentrations, patch_shapes, idx):
+    maxC_source = np.percentile(source_concentrations, 99, axis=0).reshape((1, 2))
+    maxC_target = np.percentile(self.target_concentrations, 99, axis=0).reshape((1, 2))
+    jit_output = transform_return(source_concentrations, self.stain_matrix_target, maxC_target, maxC_source, patch_shapes[idx]) 
+    return(jit_output)
+
 from PIL import Image
 from sklearn.feature_extraction.image import reconstruct_from_patches_2d
 
@@ -110,23 +118,32 @@ class Normalizer(object):
 
         split=True
         if split:
-            norm_img_patches_list  = []
-            for i, source_concentrations in enumerate(source_concentrations_list):
-                maxC_source = np.percentile(source_concentrations, 99, axis=0).reshape((1, 2))
-                maxC_target = np.percentile(self.target_concentrations, 99, axis=0).reshape((1, 2))
-                jit_output = transform_return(source_concentrations, self.stain_matrix_target, maxC_target, maxC_source, patch_shapes[i]) #I_shape, @3 (removed)
-                norm_img_patches_list.append(jit_output)
+            #added concurent concentrations x stain matrix
+            with futures.ThreadPoolExecutor(12) as executor: #os.cpu_count()
+                future_coords: Dict[futures.Future, int] = {}
+
+                for i, source_concentrations in enumerate(source_concentrations_list):
+                    future = executor.submit(
+                    concurrent_concXstain, self, source_concentrations=source_concentrations, patch_shapes=patch_shapes, idx=i)
+                    future_coords[future] = i
+                
+                norm_img_patches_list = np.zeros((len(source_concentrations_list), 224, 224, 3), dtype=np.uint8)
+                for tile_future in tqdm(futures.as_completed(future_coords), total=len(source_concentrations_list), desc='Concentrations x Stain', leave=False):
+                    i = future_coords[tile_future]
+                    patch = tile_future.result()
+                    norm_img_patches_list[i] = patch
+                
             after_transform = time.time()
             print(f'Concentrations x Stain matrix: {after_transform-after_conc}')
 
             print('Reconstructing image from patches...')
             norm_output_array = []
             canny_output_array = []
-            for i in range(len(patch_shapes)):
-                patch_shape = norm_img_patches_list[i].shape
-                norm_output_array.append(np.array(norm_img_patches_list[i]).reshape(patch_shape))
+            for i in range(len(norm_img_patches_list)):
+                # patch_shape = norm_img_patches_list[i].shape
+                norm_output_array.append(np.array(norm_img_patches_list[i])) #removed .reshape(patch_shapes[i])
                 if not rejected_list[i]:
-                    canny_output_array.append(np.array(norm_img_patches_list[i]).reshape(patch_shape))
+                    canny_output_array.append(np.array(norm_img_patches_list[i])) #removed .reshape(patch_shapes[i])
 
             output_img = Image.new("RGB", (I_shape[1], I_shape[0]))
             canny_img = Image.new("RGB", (I_shape[1], I_shape[0]))
