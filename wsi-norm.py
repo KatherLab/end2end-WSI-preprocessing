@@ -72,7 +72,7 @@ def load_slide(slide: openslide.OpenSlide, target_mpp: float = 256/224) -> np.nd
     slide_mpp = float(slide.properties[openslide.PROPERTY_NAME_MPP_X])
     tile_target_size = np.round(stride*slide_mpp/target_mpp).astype(int)
     #changed max amount of threads used
-    with futures.ThreadPoolExecutor(12) as executor:
+    with futures.ThreadPoolExecutor(122) as executor:
         # map from future to its (row, col) index
         future_coords: Dict[futures.Future, Tuple[int, int]] = {}
         for i in range(steps):  # row
@@ -172,6 +172,20 @@ if __name__ == "__main__":
             # Load WSI as one image
             if (slide_jpg := slide_cache_dir/'norm_slide.jpg').exists():
                 img_norm_wsi_jpg = PIL.Image.open(slide_jpg)
+                image_array = np.array(img_norm_wsi_jpg)
+                canny_norm_patch_list = []
+                coords_list=[]
+                total=0
+                patch_saved=0
+                for i in range(0, image_array.shape[0]-224, 224):
+                    for j in range(0, image_array.shape[1]-224, 224):
+                        total+=1
+                        patch = image_array[j:j+224, i:i+224, :]
+                        if not np.all(patch):
+                            canny_norm_patch_list.append(patch)
+                            coords_list.append((j,i))
+                            patch_saved+=1
+                print(f"Loaded normalised canny image, {patch_saved}/{total} tiles remain")
             else:
                 logging.info(f"\nLoading {slide_name}")
                 try:
@@ -209,6 +223,8 @@ if __name__ == "__main__":
                 
                 #remove original slide jpg from memory
                 del slide_array
+                #print(f"Deleting slide {slide_name} from local folder...")
+                #os.remove(str(slide_url))
 
                 print(f"\n--- Normalised slide {slide_name}: {(time.time() - start_time)} seconds ---")
                 #########################
@@ -223,7 +239,12 @@ if __name__ == "__main__":
             extract_xiyuewang_features_(norm_wsi_img=np.asarray(canny_norm_patch_list), wsi_name=slide_name, coords=coords_list, checkpoint_path=args.model, outdir=slide_cache_dir)
             print("\n--- Extracted features from slide: %s seconds ---" % (time.time() - start_time))
             #########################
+            print(f"Deleting slide {slide_name} from local folder...")
+            os.remove(str(slide_url))
+
         else:
             print(f"{slide_name}.h5 already exists. Skipping...")
+            print(f"Deleting slide {slide_name} from local folder...")
+            os.remove(str(slide_url))
 
     print(f"--- End-to-end processing time of {len(svs_dir)} slides: {str(timedelta(seconds=(time.time() - total_start_time)))} ---")

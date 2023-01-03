@@ -1,6 +1,6 @@
-dir=/scratch/ws/0/omel987e-wsi-pipeline 
-python wsi-norm.py \
-	-o ${dir}/CACHE-E2 \
-	--wsi-dir ${dir}/TCGA-BRCA-DX-E2 \
-	--cache-dir ${dir}/CACHE-E2 \
-	-m ${dir}/best_ckpt.pth
+echo "Using CUDA device 1"
+CUDA_VISIBLE_DEVICES=1, python wsi-norm.py \
+	-o /home/omarelnahhas/CACHE_MSK \
+	--wsi-dir /mnt/KATHER-T03/MSKCC-DX-WSI/msk_wsi1 \
+	--cache-dir /home/omarelnahhas/CACHE_MSK \
+	-m /home/omarelnahhas/best_ckpt.pth

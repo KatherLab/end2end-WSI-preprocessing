@@ -29,7 +29,7 @@ def canny_fcn(patch: np.array) -> Tuple[np.array, bool]:
     # hardcoded limit. Less or equal to 2 edges will be rejected (i.e., not saved)
     if(edge < 2.):
         #return a black image + rejected=True
-        return (np.ones_like(patch), True)
+        return (np.zeros_like(patch), True)
     else:
         #return the patch + rejected=False
         return (patch, False)
@@ -47,7 +47,7 @@ def reject_background(img: np.array, patch_size: Tuple[int,int], step: int, save
     patches_shapes_list=[]
     # begin_time_list = []
     #changed maximum threads from 32 to os.cpu_count()
-    with futures.ThreadPoolExecutor(1) as executor: #os.cpu_count()
+    with futures.ThreadPoolExecutor(32) as executor: #os.cpu_count()
         future_coords: Dict[futures.Future, int] = {}
         i_range = range(img_shape[0]//patch_size[0])
         j_range = range(img_shape[1]//patch_size[1])

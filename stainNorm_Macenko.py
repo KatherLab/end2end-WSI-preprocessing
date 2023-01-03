@@ -19,6 +19,7 @@ import time
 from concurrent import futures
 from tqdm import tqdm
 from typing import Dict, Tuple
+import os
 
 @njit
 def v1v2_mult(V, minPhi, maxPhi):
@@ -119,16 +120,18 @@ class Normalizer(object):
         split=True
         if split:
             #added concurent concentrations x stain matrix
-            with futures.ThreadPoolExecutor(12) as executor: #os.cpu_count()
+            with futures.ThreadPoolExecutor(32) as executor: #os.cpu_count()
                 future_coords: Dict[futures.Future, int] = {}
 
                 for i, source_concentrations in enumerate(source_concentrations_list):
-                    future = executor.submit(
-                    concurrent_concXstain, self, source_concentrations=source_concentrations, patch_shapes=patch_shapes, idx=i)
-                    future_coords[future] = i
+                    # if all zeroes, skip
+                    if np.any(source_concentrations):
+                        future = executor.submit(
+                        concurrent_concXstain, self, source_concentrations=source_concentrations, patch_shapes=patch_shapes, idx=i)
+                        future_coords[future] = i
                 
                 norm_img_patches_list = np.zeros((len(source_concentrations_list), 224, 224, 3), dtype=np.uint8)
-                for tile_future in tqdm(futures.as_completed(future_coords), total=len(source_concentrations_list), desc='Concentrations x Stain', leave=False):
+                for tile_future in tqdm(futures.as_completed(future_coords), total=len(source_concentrations_list)-len(rejected_list), desc='Concentrations x Stain', leave=False):
                     i = future_coords[tile_future]
                     patch = tile_future.result()
                     norm_img_patches_list[i] = patch

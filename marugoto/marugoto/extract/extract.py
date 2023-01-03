@@ -36,7 +36,6 @@ from concurrent import futures
 # from urllib.parse import urlparse
 import warnings
 import glob
-from patchify import patchify
 
 # supress DecompressionBombWarning: yes, our files are really that big (‘-’*)
 PIL.Image.MAX_IMAGE_PIXELS = None
