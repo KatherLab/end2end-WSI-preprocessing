@@ -136,6 +136,29 @@ def extract_xiyuewang_features_(norm_wsi_img: PIL.Image, wsi_name: str, coords: 
     return extract_features_(norm_wsi_img=norm_wsi_img, wsi_name=wsi_name, coords=coords, model=model, outdir=outdir, model_name='xiyuewang-retcll-931956f3', **kwargs) #removed model.cuda()
 
 
+
+def get_raw_tile_list(I_shape: tuple, bg_reject_array: np.array, rejected_tile_array: np.array, patch_shapes: np.array):
+    canny_output_array=[]
+    for i in range(len(bg_reject_array)):
+        if not rejected_tile_array[i]:
+            canny_output_array.append(np.array(bg_reject_array[i]))
+
+    canny_img = Image.new("RGB", (I_shape[1], I_shape[0]))
+    coords_list=[]
+    i_range = range(I_shape[0]//patch_shapes[0][0])
+    j_range = range(I_shape[1]//patch_shapes[0][1])
+
+    for i in i_range:
+        for j in j_range:
+            idx = i*len(j_range) + j
+            canny_img.paste(Image.fromarray(np.array(bg_reject_array[idx])), (j*patch_shapes[idx][1], 
+            i*patch_shapes[idx][0],j*patch_shapes[idx][1]+patch_shapes[idx][1],i*patch_shapes[idx][0]+patch_shapes[idx][0]))
+            
+            if not rejected_tile_array[idx]:
+                coords_list.append((j*patch_shapes[idx][1], i*patch_shapes[idx][0]))
+
+    return canny_img, canny_output_array, coords_list
+
 if __name__ == "__main__":
     logdir = args.cache_dir/'logfile'
     logging.basicConfig(filename=logdir, force=True)
@@ -147,16 +170,19 @@ if __name__ == "__main__":
     print(f"GPU is available: {has_gpu}")
     if has_gpu:
         print(f"Number of GPUs in the system: {torch.cuda.device_count()}")
+    norm=True
+    if norm:
+        print("\nInitialising Macenko normaliser...")
+        target = cv2.imread('normalization_template.jpg') #TODO: make scaleable with path
+        target = cv2.cvtColor(target, cv2.COLOR_BGR2RGB)
 
-    print("\nInitialising Macenko normaliser...")
-    target = cv2.imread('normalization_template.jpg') #TODO: make scaleable with path
-    target = cv2.cvtColor(target, cv2.COLOR_BGR2RGB)
-
-    normalizer = stainNorm_Macenko.Normalizer()
-    normalizer.fit(target)
+        normalizer = stainNorm_Macenko.Normalizer()
+        normalizer.fit(target)
+        logging.info('Running WSI to normalised feature extraction...')
+    else:
+        logging.info('Running WSI to raw feature extraction...')
     # norm = MacenkoNormalizer()
     # norm.fit(target)
-    logging.info('Running WSI to normalised feature extraction...')
     total_start_time = time.time()
     svs_dir = glob.glob(f"{args.wsi_dir}/*.svs")
     for slide_url in (progress := tqdm(svs_dir, leave=False)):
@@ -193,7 +219,7 @@ if __name__ == "__main__":
                 except Exception as e:
                     logging.error(f"Failed loading {slide_name}, error: {e}")
                     continue
-                    
+ 
                 #measure time performance
                 start_time = time.time()
                 slide_array = load_slide(slide)
@@ -210,13 +236,18 @@ if __name__ == "__main__":
                 #Do edge detection here and reject unnecessary tiles BEFORE normalisation
                 bg_reject_array, rejected_tile_array, patch_shapes = reject_background(img = slide_array, patch_size=(224,224), step=224, outdir=args.cache_dir, save_tiles=False)
 
-                logging.info(f"Normalising {slide_name}...")
                 #measure time performance
                 start_time = time.time()
                 #pass raw slide_array for getting the initial concentrations, bg_reject_array for actual normalisation
+                if norm:
+                    logging.info(f"Normalising {slide_name}...")
+                    canny_img, img_norm_wsi_jpg, canny_patch_list, coords_list = normalizer.transform(slide_array, bg_reject_array, rejected_tile_array, patch_shapes)
+                    print(f"\n--- Normalised slide {slide_name}: {(time.time() - start_time)} seconds ---")
+                    img_norm_wsi_jpg.save(slide_jpg) #save WSI.svs -> WSI.jpg
 
-                canny_img, img_norm_wsi_jpg, canny_norm_patch_list, coords_list = normalizer.transform(slide_array, bg_reject_array, rejected_tile_array, patch_shapes)
-                
+                else:
+                    canny_img, canny_patch_list, coords_list = get_raw_tile_list(slide_array.shape, bg_reject_array, rejected_tile_array, patch_shapes)
+
                 print("Saving Canny background rejected image...")
                 canny_img.save(f'{slide_cache_dir}/canny_slide.jpg')
                 # norm_wsi_jpg = norm.transform(np.array(slide_array))
@@ -225,18 +256,21 @@ if __name__ == "__main__":
                 del slide_array
                 #print(f"Deleting slide {slide_name} from local folder...")
                 #os.remove(str(slide_url))
+<<<<<<< HEAD
+=======
 
                 print(f"\n--- Normalised slide {slide_name}: {(time.time() - start_time)} seconds ---")
                 #########################
 
                 # img_norm_wsi_jpg = PIL.Image.fromarray(norm_wsi_jpg)
                 img_norm_wsi_jpg.save(slide_jpg) #save WSI.svs -> WSI.jpg
+>>>>>>> 9ab6f8285c65ed24f51aa46fa2f41bf6854af3e9
 
             print(f"Extracting xiyue-wang macenko features from {slide_name}")
             #FEATURE EXTRACTION
             #measure time performance
             start_time = time.time()
-            extract_xiyuewang_features_(norm_wsi_img=np.asarray(canny_norm_patch_list), wsi_name=slide_name, coords=coords_list, checkpoint_path=args.model, outdir=slide_cache_dir)
+            extract_xiyuewang_features_(norm_wsi_img=np.asarray(canny_patch_list), wsi_name=slide_name, coords=coords_list, checkpoint_path=args.model, outdir=slide_cache_dir)
             print("\n--- Extracted features from slide: %s seconds ---" % (time.time() - start_time))
             #########################
             print(f"Deleting slide {slide_name} from local folder...")
