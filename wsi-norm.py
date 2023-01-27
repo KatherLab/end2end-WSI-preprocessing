@@ -69,7 +69,12 @@ def load_slide(slide: openslide.OpenSlide, target_mpp: float = 256/224) -> np.nd
     #     initial size
     steps = 8
     stride = np.ceil(np.array(slide.dimensions)/steps).astype(int)
-    slide_mpp = float(slide.properties[openslide.PROPERTY_NAME_MPP_X])
+    try:
+        slide_mpp = float(slide.properties[openslide.PROPERTY_NAME_MPP_X])
+        print(f"Read slide MPP of {slide_mpp} from meta-data")
+    except:
+        print(f"Error: couldn't load MPP from slide!")
+        return None
     tile_target_size = np.round(stride*slide_mpp/target_mpp).astype(int)
     #changed max amount of threads used
     with futures.ThreadPoolExecutor(122) as executor:
@@ -223,6 +228,10 @@ if __name__ == "__main__":
                 #measure time performance
                 start_time = time.time()
                 slide_array = load_slide(slide)
+                if slide_array is None:
+                    print(f"Skipping slide and deleting {slide_url} due to missing MPP...")
+                    os.remove(str(slide_url))
+                    continue
                 #save raw .svs jpg
                 (Image.fromarray(slide_array)).save(f'{slide_cache_dir}/slide.jpg')
 
@@ -256,15 +265,10 @@ if __name__ == "__main__":
                 del slide_array
                 #print(f"Deleting slide {slide_name} from local folder...")
                 #os.remove(str(slide_url))
-<<<<<<< HEAD
-=======
 
-                print(f"\n--- Normalised slide {slide_name}: {(time.time() - start_time)} seconds ---")
-                #########################
 
                 # img_norm_wsi_jpg = PIL.Image.fromarray(norm_wsi_jpg)
                 img_norm_wsi_jpg.save(slide_jpg) #save WSI.svs -> WSI.jpg
->>>>>>> 9ab6f8285c65ed24f51aa46fa2f41bf6854af3e9
 
             print(f"Extracting xiyue-wang macenko features from {slide_name}")
             #FEATURE EXTRACTION
