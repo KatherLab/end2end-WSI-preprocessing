@@ -71,7 +71,10 @@ def load_slide(slide: openslide.OpenSlide, target_mpp: float = 256/224) -> np.nd
     stride = np.ceil(np.array(slide.dimensions)/steps).astype(int)
     try:
         slide_mpp = float(slide.properties[openslide.PROPERTY_NAME_MPP_X])
-        print(f"Read slide MPP of {slide_mpp} from meta-data")
+        print(f"Read slide MPP of {slide_mpp} from openslide meta-data")
+    except KeyError:
+        slide_mpp = handle_missing_mpp(slide)
+        print(f"Read slide MPP of {slide_mpp} from special meta-data")
     except:
         print(f"Error: couldn't load MPP from slide!")
         return None
@@ -95,6 +98,16 @@ def load_slide(slide: openslide.OpenSlide, target_mpp: float = 256/224) -> np.nd
             im[y:y+tile.shape[0], x:x+tile.shape[1], :] = tile
 
     return im
+def handle_missing_mpp(slide: openslide.OpenSlide) -> float:
+    logging.exception("Missing mpp in metadata of this file format, reading mpp from metadata")
+    import xml.dom.minidom as minidom
+    xml_path = slide.properties['tiff.ImageDescription']
+    doc = minidom.parseString(xml_path)
+    collection = doc.documentElement
+    images = collection.getElementsByTagName("Image")
+    pixels = images[0].getElementsByTagName("Pixels")
+    mpp = float(pixels[0].getAttribute("PhysicalSizeX"))
+    return mpp
 
 import time
 from datetime import timedelta
