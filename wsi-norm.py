@@ -167,7 +167,7 @@ def get_raw_tile_list(I_shape: tuple, bg_reject_array: np.array, rejected_tile_a
 if __name__ == "__main__":
     # print current dir
     print(f"Current working directory: {os.getcwd()}")
-    Path(args.cache_dir).mkdir(exist_ok=True)
+    Path(args.cache_dir).mkdir(exist_ok=True, parents=True)
     logdir = args.cache_dir/'logfile'
     logging.basicConfig(filename=logdir, force=True)
     logging.getLogger().addHandler(logging.StreamHandler())

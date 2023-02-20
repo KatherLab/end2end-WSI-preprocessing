@@ -29,7 +29,7 @@ jobs:
           run: |
             sh run.sh
 
-
         - name: run tests
           run: |
-            pytest *.py
+            pip install pytest
+            pytest test_workflow.py
