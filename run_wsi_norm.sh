@@ -4,6 +4,6 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 CUDA_VISIBLE_DEVICES=1, python wsi-norm.py \
 	-o /output \
-	--wsi-dir $DIR/workspace/input \
+	--wsi-dir $DIR/WSI_samples/ \
 	--cache-dir $DIR/workspace/output \
 	-m mlcontext/e2e_container/best_ckpt.pth

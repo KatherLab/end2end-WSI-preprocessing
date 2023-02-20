@@ -22,10 +22,14 @@ jobs:
             
         - name: Download test data
           run: |
-            sudo apt install gdown
+            pip install gdown
             gdown --folder https://drive.google.com/drive/folders/19HBBf4CTguLGNpuM8jLUWWGJlwO3lTRE?usp=share_link
              
         - name: Run preprocessing
           run: |
             sh run.sh
 
+
+        - name: run tests
+          run: |
+            pytest *.py
