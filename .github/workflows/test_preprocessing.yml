@@ -1,0 +1,24 @@
+name: Test preprocessing workflow
+on:
+  pull_request:
+  
+jobs:
+  test_model:
+    name: Test new model
+    runs-on: ubuntu-latest
+    steps:
+        - name: Checkout # Check out a repo
+          uses: actions/checkout@v2
+
+        - name: Install packages # Install dependencies
+          run: |
+            cd mlcontext
+            sh setup.sh
+            
+        - name: Download test data
+          run: |
+             wget ??
+             
+          
+
+
