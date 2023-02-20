@@ -12,4 +12,5 @@ if [ "" = "$PKG_OK" ]; then
   sudo apt-get --yes install $REQUIRED_PKG
 fi
 
+
 sudo singularity build --sandbox e2e_container container.def

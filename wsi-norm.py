@@ -165,6 +165,9 @@ def get_raw_tile_list(I_shape: tuple, bg_reject_array: np.array, rejected_tile_a
     return canny_img, canny_output_array, coords_list
 
 if __name__ == "__main__":
+    # print current dir
+    print(f"Current working directory: {os.getcwd()}")
+    Path(args.cache_dir).mkdir(exist_ok=True)
     logdir = args.cache_dir/'logfile'
     logging.basicConfig(filename=logdir, force=True)
     logging.getLogger().addHandler(logging.StreamHandler())
@@ -286,3 +289,37 @@ if __name__ == "__main__":
             os.remove(str(slide_url))
 
     print(f"--- End-to-end processing time of {len(svs_dir)} slides: {str(timedelta(seconds=(time.time() - total_start_time)))} ---")
+
+# test get_raw_tile_list function
+def test_get_raw_tile_list():
+    img = np.random.randint(0, 255, size=(1000, 1000, 3), dtype=np.uint8)
+    canny_img, canny_patch_list, coords_list = get_raw_tile_list(img.shape, img, img, (224,224))
+    assert len(canny_patch_list) == 4
+    assert len(coords_list) == 4
+    assert canny_patch_list[0].shape == (224,224,3)
+    assert coords_list[0] == (0,0)
+
+# test reject_background function
+def test_reject_background():
+    img = np.random.randint(0, 255, size=(1000, 1000, 3), dtype=np.uint8)
+    bg_reject_array, rejected_tile_array, patch_shapes = reject_background(img = img, patch_size=(224,224), step=224, outdir='.', save_tiles=False)
+    assert bg_reject_array.shape == (1000, 1000, 3)
+    assert rejected_tile_array.shape == (1000, 1000, 3)
+    assert patch_shapes == (224,224)
+
+    # test that the rejected tiles are all black
+    assert np.all(rejected_tile_array == 0)
+
+# test extract_xiyuewang_features_ function
+def test_extract_xiyuewang_features_():
+    img = np.random.randint(0, 255, size=(1000, 1000, 3), dtype=np.uint8)
+    extract_xiyuewang_features_(norm_wsi_img=img, wsi_name='test', coords=[(0,0)], checkpoint_path='.', outdir='.')
+
+    # test that the output file exists
+    assert os.path.exists('test.h5')
+
+    # test that the output file is not empty
+    assert os.path.getsize('test.h5') > 0
+
+    # remove the output file
+    os.remove('test.h5')

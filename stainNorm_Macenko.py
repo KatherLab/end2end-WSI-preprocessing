@@ -203,3 +203,12 @@ class Normalizer(object):
         jit_output = hematoxalin_return(source_concentrations, h, w)
 
         return jit_output
+
+#test get_stain_matrix
+def test_get_stain_matrix():
+    img = Image.open('test_images/1.jpg')
+    img = np.array(img)
+    img = ut.standardize_brightness(img)
+    stain_matrix = get_stain_matrix(img)
+    assert stain_matrix.shape == (2,3)
+    assert np.allclose(stain_matrix, [[0.650, 0.072, 0.740], [0.704, 0.990, 0.080]], atol=0.01)
