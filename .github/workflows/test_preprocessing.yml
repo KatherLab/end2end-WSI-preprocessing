@@ -1,10 +1,15 @@
 name: Test preprocessing workflow
 on:
-  pull_request:
+    push:
+        branches:
+        - dev_* # Run on all dev branches
+    pull_request:
+
+
   
 jobs:
-  test_model:
-    name: Test new model
+  validate-workflow:
+    name: validate-workflow
     runs-on: ubuntu-latest
     steps:
         - name: Checkout # Check out a repo
@@ -17,8 +22,10 @@ jobs:
             
         - name: Download test data
           run: |
-             wget ??
+            sudo apt install gdown
+            gdown --folder https://drive.google.com/drive/folders/19HBBf4CTguLGNpuM8jLUWWGJlwO3lTRE?usp=share_link
              
-          
-
+        - name: Run preprocessing
+          run: |
+            sh run.sh
 

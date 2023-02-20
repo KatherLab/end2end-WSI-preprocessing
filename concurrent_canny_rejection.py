@@ -4,8 +4,11 @@ import PIL
 from concurrent import futures
 from pathlib import Path
 import time
-from typing import Dict, Tuple
+from typing import Dict, Tuple, List, Any
 import os
+
+from numpy import ndarray
+
 
 def canny_fcn(patch: np.array) -> Tuple[np.array, bool]:
     patch_img = PIL.Image.fromarray(patch)
@@ -35,7 +38,8 @@ def canny_fcn(patch: np.array) -> Tuple[np.array, bool]:
         return (patch, False)
 
 
-def reject_background(img: np.array, patch_size: Tuple[int,int], step: int, save_tiles: bool = False, outdir: Path = None) -> Tuple[np.array, list, int, bool]:
+def reject_background(img: np.array, patch_size: Tuple[int,int], step: int, save_tiles: bool = False, outdir: Path = None) -> \
+Tuple[ndarray, ndarray, List[Any]]:
     img_shape = img.shape
     print(f"\nSize of WSI: {img_shape}")
 
