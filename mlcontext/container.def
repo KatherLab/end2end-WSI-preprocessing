@@ -43,7 +43,7 @@ From: ubuntu:20.04
           echo "model exists"
         else
           pip install -U --no-cache-dir gdown --pre
-          gdown https://drive.google.com/uc?id=1Sn0kYwkXp7eqdIPUTFtK_ilz5ThApOsn -O best_ckpt.pth
+          gdown https://drive.google.com/uc?id=1EOqdXSkIHg2Pcl3P8S4SGB5elDylw8O2 -O best_ckpt.pth
         fi
 
 %runscript
