@@ -22,7 +22,7 @@ jobs:
             
         - name: Download test data
           run: |
-            pip install gdown
+            pip install -U --no-cache-dir gdown --pre
             gdown --folder https://drive.google.com/drive/folders/19HBBf4CTguLGNpuM8jLUWWGJlwO3lTRE?usp=share_link
              
         - name: Run preprocessing

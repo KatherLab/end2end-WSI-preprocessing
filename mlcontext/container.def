@@ -42,8 +42,8 @@ From: ubuntu:20.04
           # Take action if $model exists. #
           echo "model exists"
         else
-          pip install gdown
-          gdown https://drive.google.com/file/d/1Sn0kYwkXp7eqdIPUTFtK_ilz5ThApOsn/view?usp=share_link -O best_ckpt.pth
+          pip install -U --no-cache-dir gdown --pre
+          gdown https://drive.google.com/uc?id=1Sn0kYwkXp7eqdIPUTFtK_ilz5ThApOsn -O best_ckpt.pth
         fi
 
 %runscript

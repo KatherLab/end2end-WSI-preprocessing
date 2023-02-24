@@ -120,7 +120,7 @@ class Normalizer(object):
         split=True
         if split:
             #added concurent concentrations x stain matrix
-            with futures.ThreadPoolExecutor(32) as executor: #os.cpu_count()
+            with futures.ThreadPoolExecutor(os.cpu_count()) as executor: #os.cpu_count()
                 future_coords: Dict[futures.Future, int] = {}
 
                 for i, source_concentrations in enumerate(source_concentrations_list):

@@ -77,7 +77,7 @@ def load_slide(slide: openslide.OpenSlide, target_mpp: float = 256/224) -> np.nd
         return None
     tile_target_size = np.round(stride*slide_mpp/target_mpp).astype(int)
     #changed max amount of threads used
-    with futures.ThreadPoolExecutor(122) as executor:
+    with futures.ThreadPoolExecutor(os.cpu_count()) as executor:
         # map from future to its (row, col) index
         future_coords: Dict[futures.Future, Tuple[int, int]] = {}
         for i in range(steps):  # row
@@ -239,7 +239,7 @@ if __name__ == "__main__":
                 (Image.fromarray(slide_array)).save(f'{slide_cache_dir}/slide.jpg')
 
                 #remove .SVS from memory (couple GB)
-                del slide
+                #del slide
                 
                 print("\n--- Loaded slide: %s seconds ---" % (time.time() - start_time))
                 #########################
@@ -280,13 +280,13 @@ if __name__ == "__main__":
             extract_xiyuewang_features_(norm_wsi_img=np.asarray(canny_patch_list), wsi_name=slide_name, coords=coords_list, checkpoint_path=args.model, outdir=slide_cache_dir)
             print("\n--- Extracted features from slide: %s seconds ---" % (time.time() - start_time))
             #########################
-            print(f"Deleting slide {slide_name} from local folder...")
-            os.remove(str(slide_url))
+            #print(f"Deleting slide {slide_name} from local folder...")
+            #os.remove(str(slide_url))
 
         else:
             print(f"{slide_name}.h5 already exists. Skipping...")
-            print(f"Deleting slide {slide_name} from local folder...")
-            os.remove(str(slide_url))
+            #print(f"Deleting slide {slide_name} from local folder...")
+            #os.remove(str(slide_url))
 
     print(f"--- End-to-end processing time of {len(svs_dir)} slides: {str(timedelta(seconds=(time.time() - total_start_time)))} ---")
 
