@@ -20,9 +20,11 @@ jobs:
             cd mlcontext
             sh test_workflow_setup.sh
             
-        - name: Download test data
+        - name: Download test data and model
           run: |
             pip install -U --no-cache-dir gdown --pre
+            model="mlcontext/best_ckpt.pth"
+            gdown https://drive.google.com/uc?id=1EOqdXSkIHg2Pcl3P8S4SGB5elDylw8O2 -O $model
             gdown --folder https://drive.google.com/drive/folders/19HBBf4CTguLGNpuM8jLUWWGJlwO3lTRE?usp=share_link
              
         - name: Run preprocessing
