@@ -22,4 +22,4 @@ fi
 fi
 
 #sudo singularity build --sandbox e2e_container container.def
-#sudo singularity build e2e_container.sif container.def
+sudo singularity build e2e_container.sif container.def
