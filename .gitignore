@@ -128,4 +128,7 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-run_wsi_norm.sh
+**/*.sif
+**/*.pth
+**/*.tar*
+.idea/
