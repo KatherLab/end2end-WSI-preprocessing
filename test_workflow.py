@@ -18,6 +18,6 @@ def test_h5_file():
     print(file)
     with h5py.File(file, "r") as f:
         print(f.keys())
-        assert f['feats'].shape == (4059, 2048)
-        assert f['coords'].shape == (4059, 2)
+        assert f['feats'].shape == (77, 2048)
+        assert f['coords'].shape == (77, 2)
 

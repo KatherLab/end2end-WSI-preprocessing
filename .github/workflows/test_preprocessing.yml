@@ -31,5 +31,4 @@ jobs:
 
         - name: run tests
           run: |
-            pip install pytest
-            pytest test_workflow.py
+            singularity run mlcontext/e2e_container.sif run_test.sh

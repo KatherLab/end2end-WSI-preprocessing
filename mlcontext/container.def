@@ -36,6 +36,7 @@ From: ubuntu:20.04
         #pip install -r cenv_pip.txt
         pip install --no-input torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu116
         pip install openslide-python numba scikit-learn patchify
+        pip install pytest
 
         model="./best_ckpt.pth"
         if [ -d "$model" ]; then
