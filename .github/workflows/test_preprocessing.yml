@@ -18,7 +18,7 @@ jobs:
         - name: Install packages # Install dependencies
           run: |
             cd mlcontext
-            sh setup.sh
+            sh test_workflow_setup.sh
             
         - name: Download test data
           run: |
