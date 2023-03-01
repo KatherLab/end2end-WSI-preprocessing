@@ -196,7 +196,6 @@ if __name__ == "__main__":
     svs_dir = sum((list(args.wsi_dir.glob(f'**/*.{ext}'))
                   for ext in supported_extensions),
                  start=[])
-    print(svs_dir)
     for slide_url in (progress := tqdm(svs_dir, leave=False)):
         # breakpoint()
         slide_name = Path(slide_url).stem
