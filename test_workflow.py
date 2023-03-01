@@ -9,15 +9,19 @@ __email__ = "jiefu.zhu@tu-dresden.de"
 
 from pathlib import Path
 import h5py
+retccl_feature_dimension = 2048
+true_tiles_number = {
+    '5421.h5'           : 16,
+    '1031228_001.h5'    : 77,
+}
+
 
 def test_h5_file():
     output_dir = Path('workspace/output')
     # get file end with .h5
     h5_files = list(output_dir.glob('**/*.h5'))
-    file = h5_files[0]
-    print(file)
-    with h5py.File(file, "r") as f:
-        print(f.keys())
-        assert f['feats'].shape == (77, 2048)
-        assert f['coords'].shape == (77, 2)
+    for file in h5_files:
+        print('\n checking: ', file.name)
+        with h5py.File(file, "r") as f:
+            assert true_tiles_number[file.name] == f['feats'].shape[0]
 

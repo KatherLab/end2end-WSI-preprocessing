@@ -47,6 +47,7 @@ import numpy as np
 import PIL
 import stainNorm_Macenko
 import cv2
+from common import supported_extensions
 from numba import jit
 
 # supress DecompressionBombWarning: yes, our files are really that big (‘-’*)
@@ -192,7 +193,10 @@ if __name__ == "__main__":
     # norm = MacenkoNormalizer()
     # norm.fit(target)
     total_start_time = time.time()
-    svs_dir = glob.glob(f"{args.wsi_dir}/*.svs")
+    svs_dir = sum((list(args.wsi_dir.glob(f'**/*.{ext}'))
+                  for ext in supported_extensions),
+                 start=[])
+    print(svs_dir)
     for slide_url in (progress := tqdm(svs_dir, leave=False)):
         # breakpoint()
         slide_name = Path(slide_url).stem
