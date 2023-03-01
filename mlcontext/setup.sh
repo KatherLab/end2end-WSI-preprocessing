@@ -34,7 +34,7 @@ else
 fi
 
 # define model file path
-model="$scipt_dir/best_ckpt.pth"
+model="$script_dir/best_ckpt.pth"
 
 # check if the model file exists
 if [ -f "$model" ]; then
