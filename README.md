@@ -5,7 +5,7 @@ This repository contains two main scripts for the preProcessing of the Whole Sli
 0. Install the conda packages with ```conda create --name cenv --file cenv_conda.txt python=3.8```
 1. Activate the conda environment with ```conda activate cenv```
 2. Install PyTorch at pytorch.org/get-started/locally, select pip and the required CUDA platform, and run the pip command
-3. Install the pip packages with ```pip install -r cenv_pip.txt```
+3. Install the pip packages with ```pip install openslide-python numba scikit-learn```
 4. Run the pipeline with the following arguments:
 
 Input Variable name | Description
