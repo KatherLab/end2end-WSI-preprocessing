@@ -10,10 +10,9 @@ From: ubuntu:20.04
 %post
         #basic utilities download       
         apt-get update
-        apt-get install -y openslide-tools
-        apt-get install -y python3-openslide
-        #dependencies for opencv
         apt-get install ffmpeg libsm6 libxext6  -y
+	apt-get install -y openslide-tools
+        apt-get install -y python3-openslide
         apt install -y build-essential
         apt-get install -y apt-utils wget git
         #get anaconda inside the container
@@ -34,9 +33,8 @@ From: ubuntu:20.04
         . /opt/miniconda3/etc/profile.d/conda.sh
         conda activate hpc_cenv
         #pip install -r cenv_pip.txt
-        pip install --no-input torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu116
-        pip install openslide-python numba scikit-learn patchify
-        pip install pytest
+        pip install --no-input torch torchvision torchaudio
+        pip install openslide-python numba scikit-learn pytest
 
 %runscript
         if [ $# -ne 1 ]; then
