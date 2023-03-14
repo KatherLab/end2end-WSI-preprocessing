@@ -2,6 +2,7 @@ Note: Requires Python 3.8+
 # End-to-end WSI processing pipeline
 This repository contains two main scripts for the preProcessing of the Whole Slide Images (WSIs) as an initial step for histopathological deep learning.
 
+
 0. Install the dependencies and container env with 
 
 ```cd mlcontext```
