@@ -20,9 +20,10 @@ if __name__ == '__main__':
     parser.add_argument('--wsi-dir', metavar='DIR', type=Path, required=True,
                         help='Path of where the whole-slide images are.')
     parser.add_argument('-m', '--model', metavar='DIR', type=Path, required=True,
-                        help='Path of where the whole-slide images are.')
+                        help='Path of where model for the feature extractor is.')
     parser.add_argument('--cache-dir', type=Path, default=None,
         help='Directory to cache extracted features etc. in.')
+    parser.add_argument('-e', '--extractor', type=str, help='Feature extractor to use.')
     # parser.add_argument('--cache-dir', type=Path, default=None,
     #                     help='Directory to cache extracted features etc. in.')
 
@@ -107,41 +108,66 @@ import torch
 import torch.nn as nn
 from marugoto.marugoto.extract.extract import extract_features_
 from marugoto.marugoto.extract.xiyue_wang.RetCLL import ResNet
+from marugoto.marugoto.extract.ctranspath.swin_transformer import swin_tiny_patch4_window7_224, ConvStem
 from concurrent_canny_rejection import reject_background
 from PIL import Image
 
 # %%
 
-def extract_xiyuewang_features_(norm_wsi_img: PIL.Image, wsi_name: str, coords: list, checkpoint_path: str, outdir: Path, **kwargs):
-    """Extracts features from slide tiles.
-    Args:
-        checkpoint_path:  Path to the model checkpoint file.  Can be downloaded
-            from <https://drive.google.com/drive/folders/1AhstAFVqtTqxeS9WlBpU41BV08LYFUnL>.
-    """
-   # calculate checksum of model
-    sha256 = hashlib.sha256()
-    with open(checkpoint_path, 'rb') as f:
-        while True:
-            data = f.read(1 << 16)
-            if not data:
-                break
-            sha256.update(data)
+import hashlib
+import torch
+import torch.nn as nn
+from marugoto.marugoto.extract.extract import extract_features_
+from marugoto.marugoto.extract.xiyue_wang.RetCLL import ResNet
+from marugoto.marugoto.extract.ctranspath.swin_transformer import swin_tiny_patch4_window7_224, ConvStem
+from PIL import Image
 
-    assert sha256.hexdigest() == '931956f31d3f1a3f6047f3172b9e59ee3460d29f7c0c2bb219cbc8e9207795ff'
+class FeatureExtractor:
+    def __init__(self, model_type):
+        self.model_type = model_type
 
-    model = ResNet.resnet50(num_classes=128,mlp=False, two_branch=False, normlinear=True)
-    #put the model on the CPU for HPC
-    pretext_model = torch.load(checkpoint_path, map_location=torch.device('cpu'))
-    model.fc = nn.Identity()
-    model.load_state_dict(pretext_model, strict=True)
+    def extract_features(self, norm_wsi_img: PIL.Image, wsi_name: str, coords: list, checkpoint_path: str, outdir: Path, **kwargs):
+        """Extracts features from slide tiles.
+        Args:
+            checkpoint_path:  Path to the model checkpoint file.
+        """
+        sha256 = hashlib.sha256()
+        with open(checkpoint_path, 'rb') as f:
+            while True:
+                data = f.read(1 << 16)
+                if not data:
+                    break
+                sha256.update(data)
 
-    if torch.cuda.is_available():
-        model=model.cuda()
-    
-    #TODO: replace slide_tile_paths with the actual tiles which are in memory
-    return extract_features_(norm_wsi_img=norm_wsi_img, wsi_name=wsi_name, coords=coords, model=model, outdir=outdir, model_name='xiyuewang-retcll-931956f3', **kwargs) #removed model.cuda()
+        if self.model_type == 'xiyue_wang':
+            assert sha256.hexdigest() == '931956f31d3f1a3f6047f3172b9e59ee3460d29f7c0c2bb219cbc8e9207795ff'
 
+            model = ResNet.resnet50(num_classes=128, mlp=False, two_branch=False, normlinear=True)
+            pretext_model = torch.load(checkpoint_path, map_location=torch.device('cpu'))
+            model.fc = nn.Identity()
+            model.load_state_dict(pretext_model, strict=True)
 
+            if torch.cuda.is_available():
+                model = model.cuda()
+
+            return extract_features_(norm_wsi_img=norm_wsi_img, wsi_name=wsi_name, coords=coords, model=model, outdir=outdir, model_name='xiyuewang-retcll-931956f3', **kwargs)
+
+        elif self.model_type == 'ctranspath':
+            assert sha256.hexdigest() == '7c998680060c8743551a412583fac689db43cec07053b72dfec6dcd810113539'
+
+            model = swin_tiny_patch4_window7_224(embed_layer=ConvStem, pretrained=False)
+            model.head = nn.Identity()
+
+            ctranspath = torch.load(checkpoint_path, map_location=torch.device('cpu'))
+            # print keys and values of ctranspath
+
+            model.load_state_dict(ctranspath['model'], strict=True)
+
+            return extract_features_(norm_wsi_img=norm_wsi_img, wsi_name=wsi_name, coords=coords, model=model, outdir=outdir,
+                                     model_name='xiyuewang-ctranspath-7c998680', **kwargs)
+
+        else:
+            raise ValueError('Invalid model type')
 
 def get_raw_tile_list(I_shape: tuple, bg_reject_array: np.array, rejected_tile_array: np.array, patch_shapes: np.array):
     canny_output_array=[]
@@ -276,11 +302,12 @@ if __name__ == "__main__":
                 # img_norm_wsi_jpg = PIL.Image.fromarray(norm_wsi_jpg)
                 img_norm_wsi_jpg.save(slide_jpg) #save WSI.svs -> WSI.jpg
 
-            print(f"Extracting xiyue-wang macenko features from {slide_name}")
+            print(f"Extracting {args.extractor} features from {slide_name}")
             #FEATURE EXTRACTION
             #measure time performance
             start_time = time.time()
-            extract_xiyuewang_features_(norm_wsi_img=np.asarray(canny_patch_list), wsi_name=slide_name, coords=coords_list, checkpoint_path=args.model, outdir=slide_cache_dir)
+            extractor = FeatureExtractor(args.extractor)
+            features = extractor.extract_features(norm_wsi_img=np.asarray(canny_patch_list), wsi_name=slide_name, coords=coords_list, checkpoint_path=args.model, outdir=slide_cache_dir)
             print("\n--- Extracted features from slide: %s seconds ---" % (time.time() - start_time))
             #########################
             #print(f"Deleting slide {slide_name} from local folder...")
@@ -316,7 +343,8 @@ def test_reject_background():
 # test extract_xiyuewang_features_ function
 def test_extract_xiyuewang_features_():
     img = np.random.randint(0, 255, size=(1000, 1000, 3), dtype=np.uint8)
-    extract_xiyuewang_features_(norm_wsi_img=img, wsi_name='test', coords=[(0,0)], checkpoint_path='.', outdir='.')
+    feature_extractor = FeatureExtractor('xiyuewang')
+    feature_extractor.extract_features(norm_wsi_img=img, wsi_name='test', coords=[(0,0)], checkpoint_path='.', outdir='.')
 
     # test that the output file exists
     assert os.path.exists('test.h5')

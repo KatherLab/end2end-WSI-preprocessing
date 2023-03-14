@@ -18,11 +18,12 @@ usage() {
 wsi_dir="wsi_samples/"
 cache_dir="workspace/output/"
 output_dir="output/"
-model_file="mlcontext/best_ckpt.pth"
 gpu_ids="1"
+extract="ctranspath"
+model_file="mlcontext/ctranspath.pth"
 
 # Process command-line arguments
-while getopts "hd:c:o:m:g:" opt; do
+while getopts "hd:c:o:m:g:e:" opt; do
     case "$opt" in
         h ) usage; exit 0 ;;
         d ) wsi_dir="$OPTARG" ;;
@@ -30,9 +31,15 @@ while getopts "hd:c:o:m:g:" opt; do
         o ) output_dir="$OPTARG" ;;
         m ) model_file="$OPTARG" ;;
         g ) gpu_ids="$OPTARG" ;;
+        e ) extract="$OPTARG" ;;
         ? ) usage; exit 1 ;;
     esac
 done
+if [ "$extract" = "ctranspath" ]; then
+    model_file="mlcontext/ctranspath.pth"
+elif [ "$extract" = "retccl" ]; then
+    model_file="mlcontext/best_ckpt.pth"
+fi
 
 # Set CUDA_VISIBLE_DEVICES to specified GPU IDs
 echo "Using CUDA devices $gpu_ids"
@@ -46,4 +53,5 @@ python wsi-norm.py \
     --wsi-dir "$dir/$wsi_dir" \
     --cache-dir "$dir/$cache_dir" \
     -o "$dir/$output_dir" \
-    -m "$dir/$model_file"
+    -m "$dir/$model_file" \
+    -e $extract

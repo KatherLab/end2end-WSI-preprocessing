@@ -34,8 +34,8 @@ else
 fi
 
 # define model file path
-model="$script_dir/best_ckpt.pth"
-
+retccl_model="$script_dir/best_ckpt.pth"
+ctranspath="$script_dir/ctranspath.pth"
 # check if the model file exists
 if [ -f "$model" ]; then
   echo "Model file already exists."
@@ -43,7 +43,8 @@ else
   # if not, download the model file using gdown
   echo "Downloading model file..."
   pip install -U --no-cache-dir gdown --pre
-  gdown https://drive.google.com/uc?id=1EOqdXSkIHg2Pcl3P8S4SGB5elDylw8O2 -O $model
+  gdown https://drive.google.com/uc?id=1EOqdXSkIHg2Pcl3P8S4SGB5elDylw8O2 -O $retccl_model
+  gdown "https://drive.google.com/u/0/uc?id=1DoDx_70_TLj98gTf6YTXnu4tFhsFocDX&export=download" -O $ctranspath
 fi
 
 # build singularity container
