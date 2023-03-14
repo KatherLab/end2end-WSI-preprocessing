@@ -109,7 +109,7 @@ def load_slide(slide: openslide.OpenSlide, target_mpp: float = 256/224) -> np.nd
     slide_mpp = float(slide.properties[openslide.PROPERTY_NAME_MPP_X])
     tile_target_size = np.round(stride*slide_mpp/target_mpp).astype(int)
 
-    with futures.ThreadPoolExecutor(min(32, os.cpu_count())) as executor:
+    with futures.ThreadPoolExecutor(os.cpu_count()) as executor:
         # map from future to its (row, col) index
         future_coords: Dict[futures.Future, Tuple[int, int]] = {}
         for i in range(steps):  # row

@@ -4,8 +4,11 @@ import PIL
 from concurrent import futures
 from pathlib import Path
 import time
-from typing import Dict, Tuple
+from typing import Dict, Tuple, List, Any
 import os
+
+from numpy import ndarray
+
 
 def canny_fcn(patch: np.array) -> Tuple[np.array, bool]:
     patch_img = PIL.Image.fromarray(patch)
@@ -35,7 +38,8 @@ def canny_fcn(patch: np.array) -> Tuple[np.array, bool]:
         return (patch, False)
 
 
-def reject_background(img: np.array, patch_size: Tuple[int,int], step: int, save_tiles: bool = False, outdir: Path = None) -> Tuple[np.array, list, int, bool]:
+def reject_background(img: np.array, patch_size: Tuple[int,int], step: int, save_tiles: bool = False, outdir: Path = None) -> \
+Tuple[ndarray, ndarray, List[Any]]:
     img_shape = img.shape
     print(f"\nSize of WSI: {img_shape}")
 
@@ -47,7 +51,7 @@ def reject_background(img: np.array, patch_size: Tuple[int,int], step: int, save
     patches_shapes_list=[]
     # begin_time_list = []
     #changed maximum threads from 32 to os.cpu_count()
-    with futures.ThreadPoolExecutor(32) as executor: #os.cpu_count()
+    with futures.ThreadPoolExecutor(os.cpu_count()) as executor: #os.cpu_count()
         future_coords: Dict[futures.Future, int] = {}
         i_range = range(img_shape[0]//patch_size[0])
         j_range = range(img_shape[1]//patch_size[1])
@@ -79,3 +83,21 @@ def reject_background(img: np.array, patch_size: Tuple[int,int], step: int, save
     return ordered_patch_list, rejected_tile_list, patches_shapes_list
 
 
+# test canny_fcn
+def test_canny_fcn():
+    img = cv2.imread('test.jpg')
+    patch = img[0:224, 0:224]
+    patch, is_rejected = canny_fcn(patch)
+    assert patch.shape == (224, 224, 3)
+    assert is_rejected == False
+
+
+# test reject_background
+def test_reject_background():
+    img = cv2.imread('test.jpg')
+    patch_size = (224, 224)
+    step = 224
+    ordered_patch_list, rejected_tile_list, patches_shapes_list = reject_background(img, patch_size, step)
+    assert ordered_patch_list.shape == (1, 224, 224, 3)
+    assert rejected_tile_list.shape == (1,)
+    assert patches_shapes_list == [(224, 224, 3)]

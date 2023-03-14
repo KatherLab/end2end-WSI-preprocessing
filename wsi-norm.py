@@ -20,9 +20,10 @@ if __name__ == '__main__':
     parser.add_argument('--wsi-dir', metavar='DIR', type=Path, required=True,
                         help='Path of where the whole-slide images are.')
     parser.add_argument('-m', '--model', metavar='DIR', type=Path, required=True,
-                        help='Path of where the whole-slide images are.')
+                        help='Path of where model for the feature extractor is.')
     parser.add_argument('--cache-dir', type=Path, default=None,
         help='Directory to cache extracted features etc. in.')
+    parser.add_argument('-e', '--extractor', type=str, help='Feature extractor to use.')
     # parser.add_argument('--cache-dir', type=Path, default=None,
     #                     help='Directory to cache extracted features etc. in.')
 
@@ -47,6 +48,7 @@ import numpy as np
 import PIL
 import stainNorm_Macenko
 import cv2
+from common import supported_extensions
 from numba import jit
 
 # supress DecompressionBombWarning: yes, our files are really that big (‘-’*)
@@ -77,7 +79,7 @@ def load_slide(slide: openslide.OpenSlide, target_mpp: float = 256/224) -> np.nd
         return None
     tile_target_size = np.round(stride*slide_mpp/target_mpp).astype(int)
     #changed max amount of threads used
-    with futures.ThreadPoolExecutor(122) as executor:
+    with futures.ThreadPoolExecutor(os.cpu_count()) as executor:
         # map from future to its (row, col) index
         future_coords: Dict[futures.Future, Tuple[int, int]] = {}
         for i in range(steps):  # row
@@ -106,41 +108,66 @@ import torch
 import torch.nn as nn
 from marugoto.marugoto.extract.extract import extract_features_
 from marugoto.marugoto.extract.xiyue_wang.RetCLL import ResNet
+from marugoto.marugoto.extract.ctranspath.swin_transformer import swin_tiny_patch4_window7_224, ConvStem
 from concurrent_canny_rejection import reject_background
 from PIL import Image
 
 # %%
 
-def extract_xiyuewang_features_(norm_wsi_img: PIL.Image, wsi_name: str, coords: list, checkpoint_path: str, outdir: Path, **kwargs):
-    """Extracts features from slide tiles.
-    Args:
-        checkpoint_path:  Path to the model checkpoint file.  Can be downloaded
-            from <https://drive.google.com/drive/folders/1AhstAFVqtTqxeS9WlBpU41BV08LYFUnL>.
-    """
-   # calculate checksum of model
-    sha256 = hashlib.sha256()
-    with open(checkpoint_path, 'rb') as f:
-        while True:
-            data = f.read(1 << 16)
-            if not data:
-                break
-            sha256.update(data)
+import hashlib
+import torch
+import torch.nn as nn
+from marugoto.marugoto.extract.extract import extract_features_
+from marugoto.marugoto.extract.xiyue_wang.RetCLL import ResNet
+from marugoto.marugoto.extract.ctranspath.swin_transformer import swin_tiny_patch4_window7_224, ConvStem
+from PIL import Image
 
-    assert sha256.hexdigest() == '931956f31d3f1a3f6047f3172b9e59ee3460d29f7c0c2bb219cbc8e9207795ff'
+class FeatureExtractor:
+    def __init__(self, model_type):
+        self.model_type = model_type
 
-    model = ResNet.resnet50(num_classes=128,mlp=False, two_branch=False, normlinear=True)
-    #put the model on the CPU for HPC
-    pretext_model = torch.load(checkpoint_path, map_location=torch.device('cpu'))
-    model.fc = nn.Identity()
-    model.load_state_dict(pretext_model, strict=True)
+    def extract_features(self, norm_wsi_img: PIL.Image, wsi_name: str, coords: list, checkpoint_path: str, outdir: Path, **kwargs):
+        """Extracts features from slide tiles.
+        Args:
+            checkpoint_path:  Path to the model checkpoint file.
+        """
+        sha256 = hashlib.sha256()
+        with open(checkpoint_path, 'rb') as f:
+            while True:
+                data = f.read(1 << 16)
+                if not data:
+                    break
+                sha256.update(data)
 
-    if torch.cuda.is_available():
-        model=model.cuda()
-    
-    #TODO: replace slide_tile_paths with the actual tiles which are in memory
-    return extract_features_(norm_wsi_img=norm_wsi_img, wsi_name=wsi_name, coords=coords, model=model, outdir=outdir, model_name='xiyuewang-retcll-931956f3', **kwargs) #removed model.cuda()
+        if self.model_type == 'xiyue_wang':
+            assert sha256.hexdigest() == '931956f31d3f1a3f6047f3172b9e59ee3460d29f7c0c2bb219cbc8e9207795ff'
 
+            model = ResNet.resnet50(num_classes=128, mlp=False, two_branch=False, normlinear=True)
+            pretext_model = torch.load(checkpoint_path, map_location=torch.device('cpu'))
+            model.fc = nn.Identity()
+            model.load_state_dict(pretext_model, strict=True)
 
+            if torch.cuda.is_available():
+                model = model.cuda()
+
+            return extract_features_(norm_wsi_img=norm_wsi_img, wsi_name=wsi_name, coords=coords, model=model, outdir=outdir, model_name='xiyuewang-retcll-931956f3', **kwargs)
+
+        elif self.model_type == 'ctranspath':
+            assert sha256.hexdigest() == '7c998680060c8743551a412583fac689db43cec07053b72dfec6dcd810113539'
+
+            model = swin_tiny_patch4_window7_224(embed_layer=ConvStem, pretrained=False)
+            model.head = nn.Identity()
+
+            ctranspath = torch.load(checkpoint_path, map_location=torch.device('cpu'))
+            # print keys and values of ctranspath
+
+            model.load_state_dict(ctranspath['model'], strict=True)
+
+            return extract_features_(norm_wsi_img=norm_wsi_img, wsi_name=wsi_name, coords=coords, model=model, outdir=outdir,
+                                     model_name='xiyuewang-ctranspath-7c998680', **kwargs)
+
+        else:
+            raise ValueError('Invalid model type')
 
 def get_raw_tile_list(I_shape: tuple, bg_reject_array: np.array, rejected_tile_array: np.array, patch_shapes: np.array):
     canny_output_array=[]
@@ -165,6 +192,9 @@ def get_raw_tile_list(I_shape: tuple, bg_reject_array: np.array, rejected_tile_a
     return canny_img, canny_output_array, coords_list
 
 if __name__ == "__main__":
+    # print current dir
+    print(f"Current working directory: {os.getcwd()}")
+    Path(args.cache_dir).mkdir(exist_ok=True, parents=True)
     logdir = args.cache_dir/'logfile'
     logging.basicConfig(filename=logdir, force=True)
     logging.getLogger().addHandler(logging.StreamHandler())
@@ -189,7 +219,9 @@ if __name__ == "__main__":
     # norm = MacenkoNormalizer()
     # norm.fit(target)
     total_start_time = time.time()
-    svs_dir = glob.glob(f"{args.wsi_dir}/*.svs")
+    svs_dir = sum((list(args.wsi_dir.glob(f'**/*.{ext}'))
+                  for ext in supported_extensions),
+                 start=[])
     for slide_url in (progress := tqdm(svs_dir, leave=False)):
         # breakpoint()
         slide_name = Path(slide_url).stem
@@ -236,7 +268,7 @@ if __name__ == "__main__":
                 (Image.fromarray(slide_array)).save(f'{slide_cache_dir}/slide.jpg')
 
                 #remove .SVS from memory (couple GB)
-                del slide
+                #del slide
                 
                 print("\n--- Loaded slide: %s seconds ---" % (time.time() - start_time))
                 #########################
@@ -270,19 +302,55 @@ if __name__ == "__main__":
                 # img_norm_wsi_jpg = PIL.Image.fromarray(norm_wsi_jpg)
                 img_norm_wsi_jpg.save(slide_jpg) #save WSI.svs -> WSI.jpg
 
-            print(f"Extracting xiyue-wang macenko features from {slide_name}")
+            print(f"Extracting {args.extractor} features from {slide_name}")
             #FEATURE EXTRACTION
             #measure time performance
             start_time = time.time()
-            extract_xiyuewang_features_(norm_wsi_img=np.asarray(canny_patch_list), wsi_name=slide_name, coords=coords_list, checkpoint_path=args.model, outdir=slide_cache_dir)
+            extractor = FeatureExtractor(args.extractor)
+            features = extractor.extract_features(norm_wsi_img=np.asarray(canny_patch_list), wsi_name=slide_name, coords=coords_list, checkpoint_path=args.model, outdir=slide_cache_dir)
             print("\n--- Extracted features from slide: %s seconds ---" % (time.time() - start_time))
             #########################
-            print(f"Deleting slide {slide_name} from local folder...")
-            os.remove(str(slide_url))
+            #print(f"Deleting slide {slide_name} from local folder...")
+            #os.remove(str(slide_url))
 
         else:
             print(f"{slide_name}.h5 already exists. Skipping...")
-            print(f"Deleting slide {slide_name} from local folder...")
-            os.remove(str(slide_url))
+            #print(f"Deleting slide {slide_name} from local folder...")
+            #os.remove(str(slide_url))
 
     print(f"--- End-to-end processing time of {len(svs_dir)} slides: {str(timedelta(seconds=(time.time() - total_start_time)))} ---")
+
+# test get_raw_tile_list function
+def test_get_raw_tile_list():
+    img = np.random.randint(0, 255, size=(1000, 1000, 3), dtype=np.uint8)
+    canny_img, canny_patch_list, coords_list = get_raw_tile_list(img.shape, img, img, (224,224))
+    assert len(canny_patch_list) == 4
+    assert len(coords_list) == 4
+    assert canny_patch_list[0].shape == (224,224,3)
+    assert coords_list[0] == (0,0)
+
+# test reject_background function
+def test_reject_background():
+    img = np.random.randint(0, 255, size=(1000, 1000, 3), dtype=np.uint8)
+    bg_reject_array, rejected_tile_array, patch_shapes = reject_background(img = img, patch_size=(224,224), step=224, outdir='.', save_tiles=False)
+    assert bg_reject_array.shape == (1000, 1000, 3)
+    assert rejected_tile_array.shape == (1000, 1000, 3)
+    assert patch_shapes == (224,224)
+
+    # test that the rejected tiles are all black
+    assert np.all(rejected_tile_array == 0)
+
+# test extract_xiyuewang_features_ function
+def test_extract_xiyuewang_features_():
+    img = np.random.randint(0, 255, size=(1000, 1000, 3), dtype=np.uint8)
+    feature_extractor = FeatureExtractor('xiyuewang')
+    feature_extractor.extract_features(norm_wsi_img=img, wsi_name='test', coords=[(0,0)], checkpoint_path='.', outdir='.')
+
+    # test that the output file exists
+    assert os.path.exists('test.h5')
+
+    # test that the output file is not empty
+    assert os.path.getsize('test.h5') > 0
+
+    # remove the output file
+    os.remove('test.h5')
