@@ -5,8 +5,6 @@ on:
         - dev_* # Run on all dev branches
     pull_request:
 
-
-  
 jobs:
   validate-workflow:
     name: validate-workflow
