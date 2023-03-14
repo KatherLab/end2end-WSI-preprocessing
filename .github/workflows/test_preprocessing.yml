@@ -26,7 +26,7 @@ jobs:
             retccl_model="mlcontext/best_ckpt.pth"
             ctranspath="mlcontext/ctranspath.pth"
             gdown https://drive.google.com/uc?id=1EOqdXSkIHg2Pcl3P8S4SGB5elDylw8O2 -O $retccl_model
-            gdown https://drive.google.com/u/0/uc?id=1DoDx_70_TLj98gTf6YTXnu4tFhsFocDX&export=download -O $ctranspath
+            gdown "https://drive.google.com/u/0/uc?id=1DoDx_70_TLj98gTf6YTXnu4tFhsFocDX&export=download" -O $ctranspath
             gdown --folder https://drive.google.com/drive/folders/19HBBf4CTguLGNpuM8jLUWWGJlwO3lTRE?usp=share_link
              
         - name: Run preprocessing
