@@ -282,12 +282,12 @@ if __name__ == "__main__":
                 #pass raw slide_array for getting the initial concentrations, bg_reject_array for actual normalisation
                 if norm:
                     logging.info(f"Normalising {slide_name}...")
-                    canny_img, img_norm_wsi_jpg, canny_patch_list, coords_list = normalizer.transform(slide_array, bg_reject_array, rejected_tile_array, patch_shapes)
+                    canny_img, img_norm_wsi_jpg, canny_norm_patch_list, coords_list = normalizer.transform(slide_array, bg_reject_array, rejected_tile_array, patch_shapes)
                     print(f"\n--- Normalised slide {slide_name}: {(time.time() - start_time)} seconds ---")
                     img_norm_wsi_jpg.save(slide_jpg) #save WSI.svs -> WSI.jpg
 
                 else:
-                    canny_img, canny_patch_list, coords_list = get_raw_tile_list(slide_array.shape, bg_reject_array, rejected_tile_array, patch_shapes)
+                    canny_img, canny_norm_patch_list, coords_list = get_raw_tile_list(slide_array.shape, bg_reject_array, rejected_tile_array, patch_shapes)
 
                 print("Saving Canny background rejected image...")
                 canny_img.save(f'{slide_cache_dir}/canny_slide.jpg')
@@ -307,7 +307,7 @@ if __name__ == "__main__":
             #measure time performance
             start_time = time.time()
             extractor = FeatureExtractor(args.extractor)
-            features = extractor.extract_features(norm_wsi_img=np.asarray(canny_patch_list), wsi_name=slide_name, coords=coords_list, checkpoint_path=args.model, outdir=slide_cache_dir)
+            features = extractor.extract_features(norm_wsi_img=canny_norm_patch_list, wsi_name=slide_name, coords=coords_list, checkpoint_path=args.model, outdir=slide_cache_dir)
             print("\n--- Extracted features from slide: %s seconds ---" % (time.time() - start_time))
             #########################
             #print(f"Deleting slide {slide_name} from local folder...")
