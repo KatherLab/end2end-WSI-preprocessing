@@ -150,6 +150,8 @@ class FeatureExtractor:
             if torch.cuda.is_available():
                 model = model.cuda()
 
+            print("RetCCL model successfully initialised...")
+
             return extract_features_(norm_wsi_img=norm_wsi_img, wsi_name=wsi_name, coords=coords, model=model, outdir=outdir, model_name='xiyuewang-retcll-931956f3', **kwargs)
 
         elif self.model_type == 'ctranspath':
@@ -159,9 +161,12 @@ class FeatureExtractor:
             model.head = nn.Identity()
 
             ctranspath = torch.load(checkpoint_path, map_location=torch.device('cpu'))
+            if torch.cuda.is_available():
+                model = model.cuda()
             # print keys and values of ctranspath
 
             model.load_state_dict(ctranspath['model'], strict=True)
+            print("CTransPath model successfully initialised...")
 
             return extract_features_(norm_wsi_img=norm_wsi_img, wsi_name=wsi_name, coords=coords, model=model, outdir=outdir,
                                      model_name='xiyuewang-ctranspath-7c998680', **kwargs)
