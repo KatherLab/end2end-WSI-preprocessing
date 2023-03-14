@@ -139,7 +139,7 @@ class FeatureExtractor:
                     break
                 sha256.update(data)
 
-        if self.model_type == 'xiyue_wang':
+        if self.model_type == 'retccl':
             assert sha256.hexdigest() == '931956f31d3f1a3f6047f3172b9e59ee3460d29f7c0c2bb219cbc8e9207795ff'
 
             model = ResNet.resnet50(num_classes=128, mlp=False, two_branch=False, normlinear=True)
@@ -343,7 +343,7 @@ def test_reject_background():
 # test extract_xiyuewang_features_ function
 def test_extract_xiyuewang_features_():
     img = np.random.randint(0, 255, size=(1000, 1000, 3), dtype=np.uint8)
-    feature_extractor = FeatureExtractor('xiyuewang')
+    feature_extractor = FeatureExtractor('retccl')
     feature_extractor.extract_features(norm_wsi_img=img, wsi_name='test', coords=[(0,0)], checkpoint_path='.', outdir='.')
 
     # test that the output file exists
