@@ -273,7 +273,7 @@ if __name__ == "__main__":
                 (Image.fromarray(slide_array)).save(f'{slide_cache_dir}/slide.jpg')
 
                 #remove .SVS from memory (couple GB)
-                #del slide
+                del slide
                 
                 print("\n--- Loaded slide: %s seconds ---" % (time.time() - start_time))
                 #########################
@@ -301,7 +301,7 @@ if __name__ == "__main__":
                 #remove original slide jpg from memory
                 del slide_array
                 #print(f"Deleting slide {slide_name} from local folder...")
-                #os.remove(str(slide_url))
+                #os.remove(str(slide_url)) #TO-DO: Make optional
 
 
                 # img_norm_wsi_jpg = PIL.Image.fromarray(norm_wsi_jpg)
