@@ -228,8 +228,12 @@ if __name__ == "__main__":
                   for ext in supported_extensions),
                  start=[])
     for slide_url in (progress := tqdm(svs_dir, leave=False)):
-        # breakpoint()
-        slide_name = Path(slide_url).stem
+        #handle multiple suffixes for filename
+        slide_name = Path(slide_url)
+        extensions = slide_name.suffixes
+        for _ in extensions:
+            slide_name = Path(slide_name).stem
+
         progress.set_description(slide_name)
         slide_cache_dir = args.cache_dir/slide_name
         slide_cache_dir.mkdir(parents=True, exist_ok=True)
