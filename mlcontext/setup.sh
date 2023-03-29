@@ -7,7 +7,7 @@ script_dir=$(realpath "$(dirname "${0}")")
 REQUIRED_PKG="singularity"
 
 # check if singularity is already installed
-if which $REQUIRED_PKG &> /dev/null; then
+if [ -n "$(which $REQUIRED_PKG)" ]; then
   echo "$REQUIRED_PKG already installed"
 else
   # if not, install singularity and its dependencies
