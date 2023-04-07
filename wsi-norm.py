@@ -75,10 +75,13 @@ def load_slide(slide: openslide.OpenSlide, target_mpp: float = 256/224) -> np.nd
         slide_mpp = float(slide.properties[openslide.PROPERTY_NAME_MPP_X])
         print(f"Read slide MPP of {slide_mpp} from meta-data")
     except KeyError:
-        slide_mpp = handle_missing_mpp(slide)
-    except:
-        print(f"Error: couldn't load MPP from slide!")
-        return None
+        #if it fails, then try out missing mpp handler
+        #TODO: create handlers for different image types
+        try:
+            slide_mpp = handle_missing_mpp(slide)
+        except:
+            print(f"Error: couldn't load MPP from slide!")
+            return None
     tile_target_size = np.round(stride*slide_mpp/target_mpp).astype(int)
     #changed max amount of threads used
     with futures.ThreadPoolExecutor(os.cpu_count()) as executor:
