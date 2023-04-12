@@ -3,15 +3,24 @@ on:
     push:
         branches:
         - dev_* # Run on all dev branches
+        - main # Run on main branch
     pull_request:
-
+      branches:
+        - main
 jobs:
   validate-workflow:
-    name: validate-workflow
-    runs-on: ubuntu-latest
+    name: Validate Workflow on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: ['ubuntu-22.04', 'ubuntu-20.04', 'ubuntu-18.04', 'fedora-34', 'fedora-35']
+      fail-fast: false
     steps:
         - name: Checkout # Check out a repo
           uses: actions/checkout@v2
+
+        - name: Echo OS
+          run: echo "Running on ${{ matrix.os }}"
 
         - name: Install packages # Install dependencies
           run: |
@@ -29,7 +38,7 @@ jobs:
              
         - name: Run preprocessing
           run: |
-            sh run.sh
+            singularity run mlcontext/e2e_container.sif run_wsi_norm.sh
 
         - name: run tests
           run: |

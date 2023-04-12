@@ -1,5 +1,5 @@
 BootStrap: library
-From: ubuntu:20.04
+From: ubuntu:21.10
 
 %environment
         export PATH=/miniconda3/bin:$PATH
