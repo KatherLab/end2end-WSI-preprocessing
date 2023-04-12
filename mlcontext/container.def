@@ -1,15 +1,17 @@
-BootStrap: library
-From: ubuntu:20.04
+BootStrap: docker
+From: ubuntu:latest
 
 %environment
         export PATH=/miniconda3/bin:$PATH
-
+	export DEBIAN_FRONTEND=noninteractive
+	export TZ=Europe/Berlin
 %files
         cenv_conda.txt
 
 %post
-        #basic utilities download       
+        #basic utilities download
         apt-get update
+	DEBIAN_FRONTEND="noninteractive" TZ="Europe/Berlin" apt-get install -y tzdata	
         apt-get install ffmpeg libsm6 libxext6  -y
 	apt-get install -y openslide-tools
         apt-get install -y python3-openslide
