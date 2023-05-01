@@ -46,7 +46,7 @@ echo "Using CUDA devices $gpu_ids"
 export CUDA_VISIBLE_DEVICES="$gpu_ids"
 
 # Get the absolute path of the current directory
-dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+dir=$(pwd)
 
 # Run the WSI normalization script
 python wsi-norm.py \
