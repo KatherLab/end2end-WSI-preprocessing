@@ -30,6 +30,7 @@ python wsi-norm.py \
     -m MODELPATH \
     -e FEATUREEXTRACTOR
 ```
-4. Run the script inside container env with [run_wsi_norm.sh](run_wsi_norm.sh)
+4. Run the script inside container env with [run_wsi_norm.sh](run_wsi_norm.sh):
+`singularity run --nv e2e_container.sif run_wsi_norm.sh`
 
 In this script, we are using the Macenko normalization adapted method from https://github.com/wanghao14/Stain_Normalization.git
