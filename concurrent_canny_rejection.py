@@ -38,7 +38,7 @@ def canny_fcn(patch: np.array) -> Tuple[np.array, bool]:
         return (patch, False)
 
 
-def reject_background(img: np.array, patch_size: Tuple[int,int], step: int, save_tiles: bool = False, outdir: Path = None) -> \
+def reject_background(img: np.array, patch_size: Tuple[int,int], step: int, save_tiles: bool = False, outdir: Path = None, cores: int = 8) -> \
 Tuple[ndarray, ndarray, List[Any]]:
     img_shape = img.shape
     print(f"\nSize of WSI: {img_shape}")
@@ -49,9 +49,8 @@ Tuple[ndarray, ndarray, List[Any]]:
     print(f"Splitting WSI into {x} tiles and Canny background rejection...")
     begin = time.time()
     patches_shapes_list=[]
-    # begin_time_list = []
-    #changed maximum threads from 32 to os.cpu_count()
-    with futures.ThreadPoolExecutor(os.cpu_count()) as executor: #os.cpu_count()
+
+    with futures.ThreadPoolExecutor(cores) as executor: #os.cpu_count()
         future_coords: Dict[futures.Future, int] = {}
         i_range = range(img_shape[0]//patch_size[0])
         j_range = range(img_shape[1]//patch_size[1])

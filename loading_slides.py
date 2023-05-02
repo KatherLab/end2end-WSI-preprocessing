@@ -19,7 +19,7 @@ def _load_tile(
     return np.array(tile)
 
 
-def load_slide(slide: openslide.OpenSlide, target_mpp: float = 256/224) -> np.ndarray:
+def load_slide(slide: openslide.OpenSlide, target_mpp: float = 256/224, cores: int = 8) -> np.ndarray:
     """Loads a slide into a numpy array."""
     # We load the slides in tiles to
     #  1. parallelize the loading process
@@ -40,7 +40,7 @@ def load_slide(slide: openslide.OpenSlide, target_mpp: float = 256/224) -> np.nd
             return None
     tile_target_size = np.round(stride*slide_mpp/target_mpp).astype(int)
     #changed max amount of threads used
-    with futures.ThreadPoolExecutor(os.cpu_count()) as executor:
+    with futures.ThreadPoolExecutor(cores) as executor:
         # map from future to its (row, col) index
         future_coords: Dict[futures.Future, Tuple[int, int]] = {}
         for i in range(steps):  # row

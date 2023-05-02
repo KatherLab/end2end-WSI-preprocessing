@@ -1,6 +1,5 @@
 import hashlib
 from pathlib import Path
-from marugoto.marugoto.extract.extract import extract_features_
 from marugoto.marugoto.extract.xiyue_wang.RetCLL import ResNet
 from marugoto.marugoto.extract.ctranspath.swin_transformer import swin_tiny_patch4_window7_224, ConvStem
 import torch
@@ -13,7 +12,7 @@ class FeatureExtractor:
     def __init__(self, model_type):
         self.model_type = model_type
 
-    def extract_features(self, norm_wsi_img: PIL.Image, wsi_name: str, coords: list, checkpoint_path: str, outdir: Path, **kwargs):
+    def init_feat_extractor(self, checkpoint_path: str, **kwargs):
         """Extracts features from slide tiles.
         Args:
             checkpoint_path:  Path to the model checkpoint file.
@@ -38,9 +37,9 @@ class FeatureExtractor:
                 model = model.cuda()
 
             print("RetCCL model successfully initialised...")
+            model_name='xiyuewang-retcll-931956f3'
+            return model, model_name
 
-            return extract_features_(norm_wsi_img=norm_wsi_img, wsi_name=wsi_name, coords=coords,
-                                     model=model, outdir=outdir, model_name='xiyuewang-retcll-931956f3', **kwargs)
 
         elif self.model_type == 'ctranspath':
             assert sha256.hexdigest() == '7c998680060c8743551a412583fac689db43cec07053b72dfec6dcd810113539'
@@ -49,15 +48,15 @@ class FeatureExtractor:
             model.head = nn.Identity()
 
             ctranspath = torch.load(checkpoint_path, map_location=torch.device('cpu'))
+            model.load_state_dict(ctranspath['model'], strict=True)
+            
             if torch.cuda.is_available():
                 model = model.cuda()
-            # print keys and values of ctranspath
 
-            model.load_state_dict(ctranspath['model'], strict=True)
             print("CTransPath model successfully initialised...")
+            model_name='xiyuewang-ctranspath-7c998680'
 
-            return extract_features_(norm_wsi_img=norm_wsi_img, wsi_name=wsi_name, coords=coords,
-                                     model=model, outdir=outdir,model_name='xiyuewang-ctranspath-7c998680', **kwargs)
+            return model, model_name
 
         else:
             raise ValueError('Invalid model type')
