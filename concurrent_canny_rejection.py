@@ -91,13 +91,13 @@ def test_canny_fcn():
     assert patch.shape == (224, 224, 3)
     assert is_rejected == False
 
-
-# test reject_background
+# test reject_background function
 def test_reject_background():
-    img = cv2.imread('test.jpg')
-    patch_size = (224, 224)
-    step = 224
-    ordered_patch_list, rejected_tile_list, patches_shapes_list = reject_background(img, patch_size, step)
-    assert ordered_patch_list.shape == (1, 224, 224, 3)
-    assert rejected_tile_list.shape == (1,)
-    assert patches_shapes_list == [(224, 224, 3)]
+    img = np.random.randint(0, 255, size=(1000, 1000, 3), dtype=np.uint8)
+    bg_reject_array, rejected_tile_array, patch_shapes = reject_background(img = img, patch_size=(224,224), step=224, outdir='.', save_tiles=False)
+    assert bg_reject_array.shape == (1000, 1000, 3)
+    assert rejected_tile_array.shape == (1000, 1000, 3)
+    assert patch_shapes == (224,224)
+
+    # test that the rejected tiles are all black
+    assert np.all(rejected_tile_array == 0)
