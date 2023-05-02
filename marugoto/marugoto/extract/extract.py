@@ -11,31 +11,15 @@ from torchvision import transforms
 import numpy as np
 from tqdm import tqdm
 import h5py
-
+import os
+from tqdm import tqdm
+import numpy as np
+import PIL
+from pathlib import Path
 from . import __version__
 
 
 __all__ = ['extract_features_']
-
-import os
-from matplotlib import pyplot as plt
-import openslide
-from tqdm import tqdm
-import numpy as np
-# from fastai.vision.all import load_learner
-# from pyzstd import ZstdFile
-import PIL
-import cv2
-import argparse
-import io
-from pathlib import Path
-import sys
-import shutil
-from typing import Dict, Tuple
-from concurrent import futures
-# from urllib.parse import urlparse
-import warnings
-import glob
 
 # supress DecompressionBombWarning: yes, our files are really that big (‘-’*)
 PIL.Image.MAX_IMAGE_PIXELS = None
@@ -91,9 +75,6 @@ def extract_features_(
             only one, non-augmentation iteration will be done.
     """
 
-    #TODO: remove augmented repetitions number
-    #augmented_repetitions = 10
-
     normal_transform = transforms.Compose([
         transforms.Resize(224),
         transforms.CenterCrop(224),
@@ -121,23 +102,9 @@ def extract_features_(
         json.dump({'extractor': extractor_string,
                   'augmented_repetitions': augmented_repetitions}, f)
 
-    
-    # for slide_tile_path in tqdm(slide_tile_paths):
-    #     slide_tile_path = Path(slide_tile_path)
-    #     # check if h5 for slide already exists / slide_tile_path path contains tiles
-    #     if (h5outpath := outdir/f'{slide_tile_path.name}.h5').exists():
-    #         print(f'{h5outpath} already exists.  Skipping...')
-    #         continue
-    #     if not next(slide_tile_path.glob('*.jpg'), False):
-    #         print(f'No tiles in {slide_tile_path}.  Skipping...')
-    #         continue
-    
-    # Everything below was indented 1 tab in the for 
-    #TODO: create dataset which contains the tiles instead of only the paths?
-
     unaugmented_ds = SlideTileDataset(norm_wsi_img, normal_transform)
-    augmented_ds = [] #SlideTileDataset(patch_list, augmenting_transform,
-                                    #repetitions=augmented_repetitions)
+    augmented_ds = []
+
     #clean up memory
     del norm_wsi_img
 
