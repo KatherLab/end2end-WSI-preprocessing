@@ -62,7 +62,7 @@ def get_mask_from_thumb(thumb, threshold: int) -> np.ndarray:
 #TODO: replace slide_tile_paths with the actual tiles which are in memory
 def extract_features_(
         *,
-        model, model_name, norm_wsi_img: np.ndarray, coords: list, wsi_name: str, outdir: Path, augmented_repetitions: int = 0,
+        model, model_name, norm_wsi_img: np.ndarray, coords: list, wsi_name: str, outdir: Path, augmented_repetitions: int = 0, cores: int = 8
 ) -> None:
     """Extracts features from slide tiles.
 
@@ -110,7 +110,7 @@ def extract_features_(
 
     ds = ConcatDataset([unaugmented_ds, augmented_ds])
     dl = torch.utils.data.DataLoader(
-        ds, batch_size=64, shuffle=False, num_workers=12, drop_last=False)
+        ds, batch_size=64, shuffle=False, num_workers=cores, drop_last=False)
 
     model = model.eval()
 
