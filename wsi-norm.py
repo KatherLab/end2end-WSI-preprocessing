@@ -17,6 +17,7 @@ import torch.nn as nn
 from concurrent_canny_rejection import reject_background
 from loading_slides import process_slide_jpg, load_slide, get_raw_tile_list
 from feature_extractors import FeatureExtractor
+from marugoto.marugoto.extract.extract import extract_features_
 
 
 if __name__ == '__main__':
@@ -33,6 +34,8 @@ if __name__ == '__main__':
         help='Directory to store resulting slide JPGs.')
     parser.add_argument('-e', '--extractor', type=str, 
                         help='Feature extractor to use.')
+    parser.add_argument('-c', '--cores', type=int, default=8,
+                    help='CPU cores to use, 8 default.')
     parser.add_argument('-n','--norm', action='store_true')
     parser.add_argument('--no-norm', dest='norm', action='store_false')
     parser.set_defaults(norm=True)
@@ -72,6 +75,10 @@ if __name__ == "__main__":
     else:
         logging.info('Running WSI to raw feature extraction...')
 
+    #initialize the feature extraction model
+    extractor = FeatureExtractor(args.extractor)
+    model, model_name = extractor.init_feat_extractor(checkpoint_path=args.model)
+
     (args.output_path).mkdir(parents=True, exist_ok=True)
     total_start_time = time.time()
     svs_dir = sum((list(args.wsi_dir.glob(f'**/*.{ext}'))
@@ -106,7 +113,7 @@ if __name__ == "__main__":
  
                 #measure time performance
                 start_time = time.time()
-                slide_array = load_slide(slide)
+                slide_array = load_slide(slide, args.cores)
                 if slide_array is None:
                     if args.del_slide:
                         print(f"Skipping slide and deleting {slide_url} due to missing MPP...")
@@ -123,14 +130,14 @@ if __name__ == "__main__":
 
                 #########################
                 #Do edge detection here and reject unnecessary tiles BEFORE normalisation
-                bg_reject_array, rejected_tile_array, patch_shapes = reject_background(img = slide_array, patch_size=(224,224), step=224, outdir=args.cache_dir, save_tiles=False)
+                bg_reject_array, rejected_tile_array, patch_shapes = reject_background(img = slide_array, patch_size=(224,224), step=224, outdir=args.cache_dir, save_tiles=False, cores=args.cores)
 
                 #measure time performance
                 start_time = time.time()
                 #pass raw slide_array for getting the initial concentrations, bg_reject_array for actual normalisation
                 if norm:
                     logging.info(f"Normalising {slide_name}...")
-                    canny_img, img_norm_wsi_jpg, canny_norm_patch_list, coords_list = normalizer.transform(slide_array, bg_reject_array, rejected_tile_array, patch_shapes)
+                    canny_img, img_norm_wsi_jpg, canny_norm_patch_list, coords_list = normalizer.transform(slide_array, bg_reject_array, rejected_tile_array, patch_shapes, cores=args.cores)
                     print(f"\n--- Normalised slide {slide_name}: {(time.time() - start_time)} seconds ---")
                     img_norm_wsi_jpg.save(slide_jpg) #save WSI.svs -> WSI.jpg
 
@@ -154,8 +161,8 @@ if __name__ == "__main__":
             #FEATURE EXTRACTION
             #measure time performance
             start_time = time.time()
-            extractor = FeatureExtractor(args.extractor)
-            features = extractor.extract_features(norm_wsi_img=canny_norm_patch_list, wsi_name=slide_name, coords=coords_list, checkpoint_path=args.model, outdir=args.output_path)
+            extract_features_(model=model, model_name=model_name, norm_wsi_img=canny_norm_patch_list,
+                               coords=coords_list, wsi_name=slide_name, outdir=args.output_path, cores=args.cores)
             print("\n--- Extracted features from slide: %s seconds ---" % (time.time() - start_time))
             #########################
 
