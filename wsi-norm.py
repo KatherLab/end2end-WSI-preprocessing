@@ -57,6 +57,7 @@ if __name__ == "__main__":
     logging.info(f'Stored logfile in {logdir}')
     #init the Macenko normaliser
     print(f"Number of CPUs in the system: {os.cpu_count()}")
+    print(f"Number of CPU cores used: {args.cores}")
     has_gpu=torch.cuda.is_available()
     print(f"GPU is available: {has_gpu}")
     norm=args.norm
