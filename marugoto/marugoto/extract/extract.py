@@ -92,10 +92,6 @@ def extract_features_(
         transforms.ToTensor(),
         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
     ])
-    outdir = Path(outdir)
-    outdir.mkdir(exist_ok=True, parents=True)
-    patchpatch = Path(f'{outdir}/patches')
-    patchpatch.mkdir(exist_ok=True,parents=True)
 
     extractor_string = f'marugoto-extract-v{__version__}_{model_name}'
     with open(outdir/'info.json', 'w') as f:
