@@ -41,6 +41,7 @@ if __name__ == '__main__':
     parser.set_defaults(norm=True)
     parser.add_argument('-d', '--del-slide', action='store_true', default=False,
                          help='Removing the original slide after processing.')
+    parser.add_argument('--only-fex', action='store_true', default=False)
 
     args = parser.parse_args()
 
@@ -82,10 +83,18 @@ if __name__ == "__main__":
 
     (args.output_path).mkdir(parents=True, exist_ok=True)
     total_start_time = time.time()
-    svs_dir = sum((list(args.wsi_dir.glob(f'**/*.{ext}'))
-                  for ext in supported_extensions),
-                 start=[])
-    for slide_url in (progress := tqdm(svs_dir, leave=False)):
+
+
+    if not args.only_fex:
+        img_dir = sum((list(args.wsi_dir.glob(f'**/*.{ext}'))
+                    for ext in supported_extensions),
+                    start=[])
+    else:
+        #TODO: read images from slide directory
+        img_name = "norm_slide.jpg" if args.norm else "canny_slide.jpg"
+        img_dir = list(args.wsi_dir.glob(f'**/*/{img_name}')) #TODO: CHECK IF THIS IS WORKING
+                       
+    for slide_url in (progress := tqdm(img_dir, leave=False)):
         #handle multiple suffixes for filename
         slide_name = Path(slide_url)
         extensions = slide_name.suffixes

@@ -3,7 +3,7 @@ Note: Requires Python 3.8+
 This repository contains a pipeline for the pre-processing of Whole Slide Images (WSIs) as an initial step for histopathological deep learning.
 In this pipeline, we are using the Macenko normalization adapted method from https://github.com/wanghao14/Stain_Normalization.git
 
-F
+For usage on a local computer:
 0. Clone and enter this repository on your device
 1. Install the Singularity dependencies and build container, requires (fake) root access
 ```
@@ -23,6 +23,7 @@ Input Variable name | Description
 -c | Number of CPU cores, optional
 --del_slide | Delete original slide from your drive, optional
 --no-norm | Do not apply Macenko normalization, optional
+--only-fex | Read the JPGs from previous runs and go straight into feature extraction
 
 Example usage: 
 ```python
@@ -34,7 +35,7 @@ python wsi-norm.py \
     -e FEATURE_EXTRACTOR \
     -c NUM_OF_CPU_CORES \
     --del-slide \
-    --no-norm 
+    --no-norm \
 ```
 3. Run the script inside container env with [run_wsi_norm.sh](run_wsi_norm.sh):
 `singularity run --nv -B /:/ e2e_container.sif run_wsi_norm.sh`
