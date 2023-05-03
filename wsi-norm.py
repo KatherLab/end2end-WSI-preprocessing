@@ -97,16 +97,18 @@ if __name__ == "__main__":
                        
     for slide_url in (progress := tqdm(img_dir, leave=False)):
         #handle multiple suffixes for filename
-        slide_name = Path(slide_url)
-        extensions = slide_name.suffixes
-        for _ in extensions:
-            slide_name = Path(slide_name).stem
+        slide_name = Path(slide_url).stem
+        # extensions = slide_name.suffixes
+        # for _ in extensions:
+        #     slide_name = Path(slide_name).stem
 
         progress.set_description(slide_name)
         slide_cache_dir = args.cache_dir/slide_name
         slide_cache_dir.mkdir(parents=True, exist_ok=True)
+        
+        feat_out_dir = args.output_path/slide_name
 
-        if not (os.path.exists((f'{args.cache_dir}/{slide_name}.h5'))):
+        if not (os.path.exists((f'{args.output_path}/{slide_name}.h5'))):
             # Load WSI as one image
             if (slide_jpg := slide_cache_dir/'norm_slide.jpg').exists():
                 canny_norm_patch_list, coords_list, patch_saved, total = process_slide_jpg(slide_jpg)
@@ -173,7 +175,7 @@ if __name__ == "__main__":
             #measure time performance
             start_time = time.time()
             extract_features_(model=model, model_name=model_name, norm_wsi_img=canny_norm_patch_list,
-                               coords=coords_list, wsi_name=slide_name, outdir=args.output_path, cores=args.cores)
+                               coords=coords_list, wsi_name=slide_name, outdir=feat_out_dir, cores=args.cores)
             print("\n--- Extracted features from slide: %s seconds ---" % (time.time() - start_time))
             #########################
 
