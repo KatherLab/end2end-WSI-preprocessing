@@ -78,6 +78,7 @@ if __name__ == "__main__":
         logging.info('Running WSI to raw feature extraction...')
 
     #initialize the feature extraction model
+    print(f"\nInitialising {args.extractor} model...")
     extractor = FeatureExtractor(args.extractor)
     model, model_name = extractor.init_feat_extractor(checkpoint_path=args.model)
 
@@ -182,4 +183,4 @@ if __name__ == "__main__":
                 print(f"Deleting slide {slide_name} from local folder...")
                 os.remove(str(slide_url))
 
-    print(f"--- End-to-end processing time of {len(svs_dir)} slides: {str(timedelta(seconds=(time.time() - total_start_time)))} ---")
+    print(f"--- End-to-end processing time of {len(img_dir)} slides: {str(timedelta(seconds=(time.time() - total_start_time)))} ---")
