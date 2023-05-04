@@ -116,12 +116,12 @@ def extract_features_(
         feats.append(
             model(batch.type_as(next(model.parameters()))).half().cpu().detach())
         
-    norm_method = "macenko" if is_norm else "raw"
+    norm_method = "E2E_macenko_" if is_norm else "E2E_raw_"
     model_name_norm = Path(norm_method+model_name)
-    output_file_dir = outdir.parent/model_name_norm/outdir.name
+    output_file_dir = outdir.parent/model_name_norm
     output_file_dir.mkdir(parents=True, exist_ok=True)
 
-    with h5py.File(f'{output_file_dir}.h5', 'w') as f:
+    with h5py.File(f'{output_file_dir/outdir.name}.h5', 'w') as f:
         f['coords'] = coords
         f['feats'] = torch.concat(feats).cpu().numpy()
         f['augmented'] = np.repeat(
