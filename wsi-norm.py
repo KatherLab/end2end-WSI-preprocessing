@@ -176,7 +176,7 @@ if __name__ == "__main__":
             #measure time performance
             start_time = time.time()
             extract_features_(model=model, model_name=model_name, norm_wsi_img=canny_norm_patch_list,
-                               coords=coords_list, wsi_name=slide_name, outdir=feat_out_dir, cores=args.cores)
+                               coords=coords_list, wsi_name=slide_name, outdir=feat_out_dir, cores=args.cores, is_norm=args.norm)
             print("\n--- Extracted features from slide: %s seconds ---" % (time.time() - start_time))
             #########################
 

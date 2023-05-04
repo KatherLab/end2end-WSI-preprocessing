@@ -59,10 +59,11 @@ def get_mask_from_thumb(thumb, threshold: int) -> np.ndarray:
     thumb = thumb.convert('L')
     return np.array(thumb) < threshold
 
-#TODO: replace slide_tile_paths with the actual tiles which are in memory
+
 def extract_features_(
         *,
-        model, model_name, norm_wsi_img: np.ndarray, coords: list, wsi_name: str, outdir: Path, augmented_repetitions: int = 0, cores: int = 8
+        model, model_name, norm_wsi_img: np.ndarray, coords: list, wsi_name: str, outdir: Path,
+        augmented_repetitions: int = 0, cores: int = 8, is_norm: bool = True
 ) -> None:
     """Extracts features from slide tiles.
 
@@ -114,8 +115,13 @@ def extract_features_(
     for batch in tqdm(dl, leave=False):
         feats.append(
             model(batch.type_as(next(model.parameters()))).half().cpu().detach())
+        
+    norm_method = "macenko" if is_norm else "raw"
+    model_name_norm = Path(norm_method+model_name)
+    output_file_dir = outdir.parent/model_name_norm/outdir.name
+    output_file_dir.mkdir(parents=True, exist_ok=True)
 
-    with h5py.File(f'{outdir.parent/model_name/outdir.name}.h5', 'w') as f:
+    with h5py.File(f'{output_file_dir}.h5', 'w') as f:
         f['coords'] = coords
         f['feats'] = torch.concat(feats).cpu().numpy()
         f['augmented'] = np.repeat(
