@@ -113,9 +113,9 @@ if __name__ == "__main__":
 
         progress.set_description(slide_name)
         
-        feat_out_dir = args.output_path/slide_name
+        feat_out_dir = output_file_dir/slide_name
 
-        if not (os.path.exists((f'{args.output_path}/{slide_name}.h5'))):
+        if not (os.path.exists((f'{feat_out_dir}.h5'))):
             # Load WSI as one image
             if (args.only_fex and (slide_jpg := slide_url).exists()) \
                 or (slide_jpg := slide_cache_dir/'norm_slide.jpg').exists():
