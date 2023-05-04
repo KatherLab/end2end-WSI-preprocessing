@@ -90,9 +90,8 @@ if __name__ == "__main__":
     model_name_norm = Path(norm_method+model_name)
     output_file_dir = args.output_path/model_name_norm
     output_file_dir.mkdir(parents=True, exist_ok=True)
-
+    
     total_start_time = time.time()
-
 
     if not args.only_fex:
         img_dir = sum((list(args.wsi_dir.glob(f'**/*.{ext}'))
@@ -121,7 +120,7 @@ if __name__ == "__main__":
             if (args.only_fex and (slide_jpg := slide_url).exists()) \
                 or (slide_jpg := slide_cache_dir/'norm_slide.jpg').exists():
                 canny_norm_patch_list, coords_list, patch_saved, total = process_slide_jpg(slide_jpg)
-                print(f"Loaded normalised canny image, {patch_saved}/{total} tiles remain")
+                print(f"Loaded {img_name}, {patch_saved}/{total} tiles remain")
             else:
                 logging.info(f"\nLoading {slide_name}")
                 try:
