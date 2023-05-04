@@ -4,6 +4,7 @@ This repository contains a pipeline for the pre-processing of Whole Slide Images
 In this pipeline, we are using the Macenko normalization adapted method from https://github.com/wanghao14/Stain_Normalization.git
 
 For usage on a local computer:
+
 0. Clone and enter this repository on your device
 1. Install the Singularity dependencies and build container, requires (fake) root access
 ```
