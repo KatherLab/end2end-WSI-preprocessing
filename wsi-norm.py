@@ -97,15 +97,14 @@ if __name__ == "__main__":
     output_file_dir.mkdir(parents=True, exist_ok=True)
     
     total_start_time = time.time()
-
+    
+    img_name = "norm_slide.jpg" if args.norm else "canny_slide.jpg"
     if not args.only_fex:
         img_dir = sum((list(args.wsi_dir.glob(f'**/*.{ext}'))
                     for ext in supported_extensions),
                     start=[])
     else:
-        #TODO: read images from slide directory
-        img_name = "norm_slide.jpg" if args.norm else "canny_slide.jpg"
-        img_dir = list(args.wsi_dir.glob(f'**/*/{img_name}')) #TODO: CHECK IF THIS IS WORKING
+        img_dir = list(args.wsi_dir.glob(f'**/*/{img_name}'))
                        
     for slide_url in (progress := tqdm(img_dir, leave=False)):
         
