@@ -38,8 +38,8 @@ python wsi-norm.py \
     --del-slide \
     --no-norm \
 ```
-3. Run the script inside container env with [run_wsi_norm.sh](run_wsi_norm.sh):
-`singularity run --nv -B /:/ e2e_container.sif run_wsi_norm.sh`
+3. Run the script from the main directory with [run_wsi_norm.sh](run_wsi_norm.sh):
+`singularity run --nv -B /:/ mlcontext/e2e_container.sif run_wsi_norm.sh`
 
 
 ## INFO
