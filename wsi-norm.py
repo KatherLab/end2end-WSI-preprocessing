@@ -85,9 +85,10 @@ if __name__ == "__main__":
     #create output feature folder, f.e.:
     #~/output_folder/E2E_macenko_xiyuewang-ctranspath/
     (args.output_path).mkdir(parents=True, exist_ok=True)
+    
     norm_method = "E2E_macenko_" if args.norm else "E2E_raw_"
     model_name_norm = Path(norm_method+model_name)
-    output_file_dir = args.output_path.parent/model_name_norm
+    output_file_dir = args.output_path/model_name_norm
     output_file_dir.mkdir(parents=True, exist_ok=True)
 
     total_start_time = time.time()
