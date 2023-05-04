@@ -1,7 +1,7 @@
 import hashlib
 from pathlib import Path
-from ..marugoto.marugoto.extract.xiyue_wang.RetCLL import ResNet
-from ..marugoto.marugoto.extract.ctranspath.swin_transformer import swin_tiny_patch4_window7_224, ConvStem
+from marugoto.marugoto.extract.xiyue_wang.RetCLL import ResNet
+from marugoto.marugoto.extract.ctranspath.swin_transformer import swin_tiny_patch4_window7_224, ConvStem
 import torch
 import torch.nn as nn
 import PIL
