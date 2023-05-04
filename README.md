@@ -22,7 +22,7 @@ Input Variable name | Description
 -m | Path to the SSL model used for feature extraction
 -e | Feature extractor, 'retccl' or 'ctranspath'
 -c | Number of CPU cores, optional
---del_slide | Delete original slide from your drive, optional
+--del-slide | Delete original slide from your drive, optional
 --no-norm | Do not apply Macenko normalization, optional
 --only-fex | Read the JPGs from previous runs and go straight into feature extraction
 
