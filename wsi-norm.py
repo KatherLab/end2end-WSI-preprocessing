@@ -96,21 +96,22 @@ if __name__ == "__main__":
         img_dir = list(args.wsi_dir.glob(f'**/*/{img_name}')) #TODO: CHECK IF THIS IS WORKING
                        
     for slide_url in (progress := tqdm(img_dir, leave=False)):
-        #handle multiple suffixes for filename
-        slide_name = Path(slide_url).stem
-        # extensions = slide_name.suffixes
-        # for _ in extensions:
-        #     slide_name = Path(slide_name).stem
+        
+        if not args.only_fex:
+            slide_name = Path(slide_url).stem
+            slide_cache_dir = args.cache_dir/slide_name
+            slide_cache_dir.mkdir(parents=True, exist_ok=True)
+        else:
+            slide_name = Path(slide_url).parent.name
 
         progress.set_description(slide_name)
-        slide_cache_dir = args.cache_dir/slide_name
-        slide_cache_dir.mkdir(parents=True, exist_ok=True)
         
         feat_out_dir = args.output_path/slide_name
 
         if not (os.path.exists((f'{args.output_path}/{slide_name}.h5'))):
             # Load WSI as one image
-            if (slide_jpg := slide_cache_dir/'norm_slide.jpg').exists():
+            if (args.only_fex and (slide_jpg := slide_url).exists()) \
+                or (slide_jpg := slide_cache_dir/'norm_slide.jpg').exists():
                 canny_norm_patch_list, coords_list, patch_saved, total = process_slide_jpg(slide_jpg)
                 print(f"Loaded normalised canny image, {patch_saved}/{total} tiles remain")
             else:
