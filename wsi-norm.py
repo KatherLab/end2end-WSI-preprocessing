@@ -1,24 +1,28 @@
+__author__ = "Omar El Nahhas"
+__copyright__ = "Copyright 2023, Kather Lab"
+__license__ = "MIT"
+__version__ = "0.1.0"
+__maintainer__ = ["Omar"]
+__email__ = "omar.el_nahhas@tu-dresden.de"
+
+
 import argparse
 from pathlib import Path
 import logging
 import os
-from matplotlib import pyplot as plt
 import openslide
 from tqdm import tqdm
 import PIL
-import stainNorm_Macenko
 import cv2
-from common import supported_extensions
 import time
 from datetime import timedelta
 from pathlib import Path
 import torch
-import torch.nn as nn
-from concurrent_canny_rejection import reject_background
-from loading_slides import process_slide_jpg, load_slide, get_raw_tile_list
-from feature_extractors import FeatureExtractor
+from helpers.common import supported_extensions
+from helpers.concurrent_canny_rejection import reject_background
+from helpers.loading_slides import process_slide_jpg, load_slide, get_raw_tile_list
+from helpers.feature_extractors import FeatureExtractor
 from marugoto.marugoto.extract.extract import extract_features_
-
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
