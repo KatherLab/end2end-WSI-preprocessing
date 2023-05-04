@@ -41,3 +41,9 @@ python wsi-norm.py \
 3. Run the script inside container env with [run_wsi_norm.sh](run_wsi_norm.sh):
 `singularity run --nv -B /:/ e2e_container.sif run_wsi_norm.sh`
 
+
+## INFO
+The features are extracted from tiles with a resolution of 224x224 px and edge length of 256 μm.
+When opting for normalization, the H&E slides are normalized according to Macenko et al., using the target distribution from the following image:
+
+![Target distribution](normalization_template.jpg)
