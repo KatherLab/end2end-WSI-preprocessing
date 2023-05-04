@@ -102,7 +102,7 @@ class Normalizer(object):
         return ut.OD_to_RGB(self.stain_matrix_target)
 
 
-    def transform(self, og_img: np.array, bg_rejected_img: np.array, rejected_list: np.array, patch_shapes: list): #TODO
+    def transform(self, og_img: np.array, bg_rejected_img: np.array, rejected_list: np.array, patch_shapes: list, cores: int=8): #TODO: add optional split, patch sizes, overlap
         begin = time.time()
         I = ut.standardize_brightness(og_img)
         after_sb = time.time()
@@ -120,7 +120,7 @@ class Normalizer(object):
         split=True
         if split:
             #added concurent concentrations x stain matrix
-            with futures.ThreadPoolExecutor(os.cpu_count()) as executor: #os.cpu_count()
+            with futures.ThreadPoolExecutor(cores) as executor:
                 future_coords: Dict[futures.Future, int] = {}
 
                 for i, source_concentrations in enumerate(source_concentrations_list):

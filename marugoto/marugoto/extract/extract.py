@@ -11,31 +11,15 @@ from torchvision import transforms
 import numpy as np
 from tqdm import tqdm
 import h5py
-
+import os
+from tqdm import tqdm
+import numpy as np
+import PIL
+from pathlib import Path
 from . import __version__
 
 
 __all__ = ['extract_features_']
-
-import os
-from matplotlib import pyplot as plt
-import openslide
-from tqdm import tqdm
-import numpy as np
-# from fastai.vision.all import load_learner
-# from pyzstd import ZstdFile
-import PIL
-import cv2
-import argparse
-import io
-from pathlib import Path
-import sys
-import shutil
-from typing import Dict, Tuple
-from concurrent import futures
-# from urllib.parse import urlparse
-import warnings
-import glob
 
 # supress DecompressionBombWarning: yes, our files are really that big (‘-’*)
 PIL.Image.MAX_IMAGE_PIXELS = None
@@ -75,10 +59,11 @@ def get_mask_from_thumb(thumb, threshold: int) -> np.ndarray:
     thumb = thumb.convert('L')
     return np.array(thumb) < threshold
 
-#TODO: replace slide_tile_paths with the actual tiles which are in memory
+
 def extract_features_(
         *,
-        model, model_name, norm_wsi_img: np.ndarray, coords: list, wsi_name: str, outdir: Path, augmented_repetitions: int = 0,
+        model, model_name, norm_wsi_img: np.ndarray, coords: list, wsi_name: str, outdir: Path,
+        augmented_repetitions: int = 0, cores: int = 8, is_norm: bool = True
 ) -> None:
     """Extracts features from slide tiles.
 
@@ -90,9 +75,6 @@ def extract_features_(
             dataset with augmentation should be performed.  0 means that
             only one, non-augmentation iteration will be done.
     """
-
-    #TODO: remove augmented repetitions number
-    #augmented_repetitions = 10
 
     normal_transform = transforms.Compose([
         transforms.Resize(224),
@@ -111,39 +93,21 @@ def extract_features_(
         transforms.ToTensor(),
         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
     ])
-    outdir = Path(outdir)
-    outdir.mkdir(exist_ok=True, parents=True)
-    patchpatch = Path(f'{outdir}/patches')
-    patchpatch.mkdir(exist_ok=True,parents=True)
 
     extractor_string = f'marugoto-extract-v{__version__}_{model_name}'
-    with open(outdir/'info.json', 'w') as f:
+    with open(outdir.parent/'info.json', 'w') as f:
         json.dump({'extractor': extractor_string,
                   'augmented_repetitions': augmented_repetitions}, f)
 
-    
-    # for slide_tile_path in tqdm(slide_tile_paths):
-    #     slide_tile_path = Path(slide_tile_path)
-    #     # check if h5 for slide already exists / slide_tile_path path contains tiles
-    #     if (h5outpath := outdir/f'{slide_tile_path.name}.h5').exists():
-    #         print(f'{h5outpath} already exists.  Skipping...')
-    #         continue
-    #     if not next(slide_tile_path.glob('*.jpg'), False):
-    #         print(f'No tiles in {slide_tile_path}.  Skipping...')
-    #         continue
-    
-    # Everything below was indented 1 tab in the for 
-    #TODO: create dataset which contains the tiles instead of only the paths?
-
     unaugmented_ds = SlideTileDataset(norm_wsi_img, normal_transform)
-    augmented_ds = [] #SlideTileDataset(patch_list, augmenting_transform,
-                                    #repetitions=augmented_repetitions)
+    augmented_ds = []
+
     #clean up memory
     del norm_wsi_img
 
     ds = ConcatDataset([unaugmented_ds, augmented_ds])
     dl = torch.utils.data.DataLoader(
-        ds, batch_size=64, shuffle=False, num_workers=12, drop_last=False)
+        ds, batch_size=64, shuffle=False, num_workers=cores, drop_last=False)
 
     model = model.eval()
 

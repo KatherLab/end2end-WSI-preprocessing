@@ -1,5 +1,17 @@
 #!/bin/bash
 
+
+##### ONLY THINGS TO FILL IN
+# Default values, use absolute paths only!
+wsi_dir="wsi_samples/"                #path
+cache_dir="workspace/output/"         #path
+output_dir="output/"                  #path
+gpu_ids="1"                           #select GPU ID
+extract="ctranspath"                  #retccl or ctranspath
+model_file="mlcontext/ctranspath.pth" #path, downloaded with setup.sh
+#####
+
+
 # Usage information
 usage() {
     echo "Usage: $(basename "$0") [-h] [-d <wsi_dir>] [-c <cache_dir>] [-o <output_dir>] [-m <model_file>] [-g <gpu_ids>]"
@@ -13,14 +25,6 @@ usage() {
     echo "  -g <gpu_ids>     Comma-separated list of GPU IDs to use (default: 1)"
     echo ""
 }
-
-# Default values
-wsi_dir="wsi_samples/"
-cache_dir="workspace/output/"
-output_dir="output/"
-gpu_ids="1"
-extract="ctranspath"
-model_file="mlcontext/ctranspath.pth"
 
 # Process command-line arguments
 while getopts "hd:c:o:m:g:e:" opt; do
@@ -45,13 +49,10 @@ fi
 echo "Using CUDA devices $gpu_ids"
 export CUDA_VISIBLE_DEVICES="$gpu_ids"
 
-# Get the absolute path of the current directory
-dir=$(pwd)
-
 # Run the WSI normalization script
 python wsi-norm.py \
-    --wsi-dir "$dir/$wsi_dir" \
-    --cache-dir "$dir/$cache_dir" \
-    -o "$dir/$output_dir" \
-    -m "$dir/$model_file" \
+    --wsi-dir "$wsi_dir" \
+    --cache-dir "$cache_dir" \
+    -o "$output_dir" \
+    -m "$model_file" \
     -e $extract
