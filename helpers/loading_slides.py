@@ -1,9 +1,6 @@
-from pathlib import Path
 from typing import Dict, Tuple
 from concurrent import futures
 import logging
-import os
-from matplotlib import pyplot as plt
 import openslide
 from tqdm import tqdm
 import numpy as np
