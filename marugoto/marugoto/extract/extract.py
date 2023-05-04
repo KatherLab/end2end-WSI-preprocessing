@@ -116,7 +116,7 @@ def extract_features_(
         feats.append(
             model(batch.type_as(next(model.parameters()))).half().cpu().detach())
 
-    with h5py.File(f'{outdir/outdir.name}.h5', 'w') as f:
+    with h5py.File(f'{outdir}.h5', 'w') as f:
         f['coords'] = coords
         f['feats'] = torch.concat(feats).cpu().numpy()
         f['augmented'] = np.repeat(
