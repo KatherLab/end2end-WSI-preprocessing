@@ -101,11 +101,11 @@ def process_slide_jpg(slide_jpg: PIL.Image):
     for i in range(0, image_array.shape[0]-224, 224):
         for j in range(0, image_array.shape[1]-224, 224):
             total+=1
-            patch = image_array[j:j+224, i:i+224, :]
+            patch = image_array[i:i+224, j:j+224, :]
             # if patch is not fully black (i.e. rejected previously)
             if np.sum(patch) > 0:
                 canny_norm_patch_list.append(patch)
-                coords_list.append((j,i))
+                coords_list.append((i,j))
                 patch_saved+=1
     return canny_norm_patch_list, coords_list, patch_saved, total
 
