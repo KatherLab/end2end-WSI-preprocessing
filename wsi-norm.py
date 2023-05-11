@@ -125,6 +125,9 @@ if __name__ == "__main__":
                 or (slide_jpg := slide_cache_dir/'norm_slide.jpg').exists():
                 canny_norm_patch_list, coords_list, patch_saved, total = process_slide_jpg(slide_jpg)
                 print(f"Loaded {img_name}, {patch_saved}/{total} tiles remain")
+                if patch_saved == 0:
+                    print("No tiles remain for {slide_name}, skipping...")
+                    continue
             else:
                 logging.info(f"\nLoading {slide_name}")
                 try:
