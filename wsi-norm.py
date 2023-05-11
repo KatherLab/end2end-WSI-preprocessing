@@ -189,9 +189,13 @@ if __name__ == "__main__":
             #FEATURE EXTRACTION
             #measure time performance
             start_time = time.time()
-            extract_features_(model=model, model_name=model_name, norm_wsi_img=canny_norm_patch_list,
-                               coords=coords_list, wsi_name=slide_name, outdir=feat_out_dir, cores=args.cores, is_norm=args.norm)
-            print("\n--- Extracted features from slide: %s seconds ---" % (time.time() - start_time))
+            if len(canny_norm_patch_list) > 0:
+                extract_features_(model=model, model_name=model_name, norm_wsi_img=canny_norm_patch_list,
+                                coords=coords_list, wsi_name=slide_name, outdir=feat_out_dir, cores=args.cores, is_norm=args.norm)
+                print("\n--- Extracted features from slide: %s seconds ---" % (time.time() - start_time))
+            else:
+                print("0 tiles remain to extract features from after pre-processing {slide_name}, skipping...")
+                continue
             #########################
 
         else:
