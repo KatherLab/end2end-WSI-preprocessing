@@ -62,7 +62,7 @@ def get_mask_from_thumb(thumb, threshold: int) -> np.ndarray:
 
 def extract_features_(
         *,
-        model, model_name, norm_wsi_img: np.ndarray, coords: list, wsi_name: str, outdir: Path,
+        model, model_name, norm_wsi_img: np.ndarray, coords: list, zoom: list, wsi_name: str, outdir: Path,
         augmented_repetitions: int = 0, cores: int = 8, is_norm: bool = True
 ) -> None:
     """Extracts features from slide tiles.
@@ -118,6 +118,7 @@ def extract_features_(
 
     with h5py.File(f'{outdir}.h5', 'w') as f:
         f['coords'] = coords
+        f['zoom'] = zoom
         f['feats'] = torch.concat(feats).cpu().numpy()
         f['augmented'] = np.repeat(
             [False, True], [len(unaugmented_ds), len(augmented_ds)])
