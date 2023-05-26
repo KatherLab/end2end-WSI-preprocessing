@@ -5,7 +5,7 @@ import openslide
 from tqdm import tqdm
 import numpy as np
 import PIL
-
+from scipy import ndimage
 PIL.Image.MAX_IMAGE_PIXELS = None
 
 def _load_tile(
@@ -90,24 +90,49 @@ def get_raw_tile_list(I_shape: tuple, bg_reject_array: np.array, rejected_tile_a
 
     return canny_img, canny_output_array, coords_list
 
-
-def process_slide_jpg(slide_jpg: PIL.Image):
+def process_slide_jpg(slide_jpg: PIL.Image, zoom=False):
     img_norm_wsi_jpg = PIL.Image.open(slide_jpg)
     image_array = np.array(img_norm_wsi_jpg)
+    zoom_levels = [1,2,4,16] # maybe add 8, maybe remove 16
     canny_norm_patch_list = []
     coords_list=[]
+    zoom_list=[]
     total=0
     patch_saved=0
-    for i in range(0, image_array.shape[0]-224, 224):
-        for j in range(0, image_array.shape[1]-224, 224):
-            total+=1
-            patch = image_array[i:i+224, j:j+224, :]
-            # if patch is not fully black (i.e. rejected previously)
-            if np.sum(patch) > 0:
-                canny_norm_patch_list.append(patch)
-                coords_list.append((i,j))
-                patch_saved+=1
-    return canny_norm_patch_list, coords_list, patch_saved, total
+    # if (np.count_nonzero(patch)/patch.size) >= 1/4:
+    if zoom:
+        for z in zoom_levels:
+            img_pxl = 224*z
+            for i in range(0, image_array.shape[0]-img_pxl, img_pxl):
+                for j in range(0, image_array.shape[1]-img_pxl, img_pxl):
+                    total+=1
+                    patch = image_array[i:i+img_pxl, j:j+img_pxl, :]
+                    # if patch is not fully black (i.e. rejected previously)
+                    if z>1:
+                        if (np.count_nonzero(patch)/patch.size)>=min(1/4,1/z):
+                            patch = ndimage.zoom(patch, (224 / patch.shape[0], 224 / patch.shape[1], 1))
+                            canny_norm_patch_list.append(patch)
+                            coords_list.append((i,j))
+                            zoom_list.append(z)
+                            patch_saved+=1
+                    else:    
+                        if np.sum(patch) > 0:
+                            canny_norm_patch_list.append(patch)
+                            coords_list.append((i,j))
+                            zoom_list.append(z)
+                            patch_saved+=1
+    else:
+        for i in range(0, image_array.shape[0]-224, 224):
+            for j in range(0, image_array.shape[1]-224, 224):
+                total+=1
+                patch = image_array[i:i+224, j:j+224, :]
+                # if patch is not fully black (i.e. rejected previously)
+                if np.sum(patch) > 0:
+                    canny_norm_patch_list.append(patch)
+                    coords_list.append((i,j))
+                    zoom_list.append(1)
+                    patch_saved+=1
+    return canny_norm_patch_list, coords_list, zoom_list, patch_saved, total
 
 
 # test get_raw_tile_list function

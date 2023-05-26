@@ -7,6 +7,8 @@ import torch.nn as nn
 import PIL
 import numpy as np
 import os
+from vits import vit_conv_base
+
 
 class FeatureExtractor:
     def __init__(self, model_type):
@@ -57,9 +59,79 @@ class FeatureExtractor:
             model_name='xiyuewang-ctranspath-7c998680'
 
             return model, model_name
+        
+        if 'swin' in self.model_type:
+
+            model = swin_tiny_patch4_window7_224(embed_layer=ConvStem, pretrained=False)
+            model.head = nn.Identity()
+
+            state_dict = torch.load(checkpoint_path, map_location=torch.device('cpu'))
+            model.load_state_dict(state_dict, strict=True)
+            if torch.cuda.is_available():
+                model = model.cuda()
+
+            print(f"{self.model_type} model successfully initialised...")
+
+            return model, self.model_type
+ 
+        if 'dinoV2' in self.model_type:
+            
+            #model = vit_base(patch_size=14)
+            #dinoV2 = torch.load("/mnt/SATELLITE_03/tim_warmup/dino/dinov2_vitb14_pretrain.pth")
+            
+            #model.load_state_dict(dinoV2,strict=False)
+            if "epoch" in self.model_type:
+                model = torch.hub.load('facebookresearch/dinov2', 'dinov2_vitb14')
+                state_dict = torch.load(checkpoint_path, map_location=torch.device('cpu'))
+                model.load_state_dict(state_dict, strict=True)
+            
+            else:
+                if len(self.model_type.split("-"))>1:
+                    model_size=self.model_type.split("-")[-1].lower()
+                    model = torch.hub.load('facebookresearch/dinov2', f'dinov2_vit{model_size}14')
+                else:
+                    model = torch.hub.load('facebookresearch/dinov2', 'dinov2_vitb14')
+            
+            if torch.cuda.is_available():
+                model = model.cuda()
+            
+            print(f"{self.model_type} model successfully initialised...")
+            return model, self.model_type
+
+        if 'moco-vit' in self.model_type:
+            
+            model = vit_conv_base() 
+            model.head = nn.Identity()
+            
+            state_dict = torch.load(checkpoint_path, map_location=torch.device('cpu'))
+            model.load_state_dict(state_dict, strict=True)
+            if torch.cuda.is_available():
+                model = model.cuda()
+
+            print(f"{self.model_type} model successfully initialised...")
+
+            return model, self.model_type
+
+
+        if self.model_type == 'resnet50':
+		
+            #model = ResNet.resnet50(num_classes=128, pretrained=True, mlp=False, two_branch=False, normlinear=True)
+            #model.fc = nn.Identity()
+            model = ResNet.resnet50(num_classes=1000, pretrained=True, mlp=False, two_branch=False, normlinear=True)
+            model.fc = nn.Identity()
+
+            if torch.cuda.is_available():
+                model = model.cuda()
+
+            print("ResNet50 model successfully initialised...")
+
+            return model, self.model_type
+
 
         else:
             raise ValueError('Invalid model type')
+        
+        
         
 
 # test extract_xiyuewang_features_ function

@@ -10,6 +10,7 @@ import argparse
 from pathlib import Path
 import logging
 import os
+import numpy as np
 import openslide
 from tqdm import tqdm
 import PIL
@@ -43,6 +44,8 @@ if __name__ == '__main__':
                     help='CPU cores to use, 8 default.')
     parser.add_argument('-n','--norm', action='store_true')
     parser.add_argument('--no-norm', dest='norm', action='store_false')
+    parser.add_argument('-z','--zoom',action='store_true', 
+                        default=False,help="Extract features for different zoom levels.")
     parser.set_defaults(norm=True)
     parser.add_argument('-d', '--del-slide', action='store_true', default=False,
                          help='Removing the original slide after processing.')
@@ -103,8 +106,10 @@ if __name__ == "__main__":
         img_dir = sum((list(args.wsi_dir.glob(f'**/*.{ext}'))
                     for ext in supported_extensions),
                     start=[])
+        img_dir = np.random.permutation(img_dir).tolist()
     else:
         img_dir = list(args.wsi_dir.glob(f'**/*/{img_name}'))
+        img_dir = np.random.permutation(img_dir).tolist()
                        
     for slide_url in (progress := tqdm(img_dir, leave=False)):
         
@@ -123,7 +128,7 @@ if __name__ == "__main__":
             # Load WSI as one image
             if (args.only_fex and (slide_jpg := slide_url).exists()) \
                 or (slide_jpg := slide_cache_dir/'norm_slide.jpg').exists():
-                canny_norm_patch_list, coords_list, patch_saved, total = process_slide_jpg(slide_jpg)
+                canny_norm_patch_list, coords_list, zoom_list, patch_saved, total = process_slide_jpg(slide_jpg,zoom=args.zoom)
                 print(f"Loaded {img_name}, {patch_saved}/{total} tiles remain")
             else:
                 logging.info(f"\nLoading {slide_name}")
@@ -186,8 +191,10 @@ if __name__ == "__main__":
             #FEATURE EXTRACTION
             #measure time performance
             start_time = time.time()
+            if not zoom_list:
+                zoom_list = np.ones(len(coords_list)).tolist()
             extract_features_(model=model, model_name=model_name, norm_wsi_img=canny_norm_patch_list,
-                               coords=coords_list, wsi_name=slide_name, outdir=feat_out_dir, cores=args.cores, is_norm=args.norm)
+                               coords=coords_list, zoom=zoom_list, wsi_name=slide_name, outdir=feat_out_dir, cores=args.cores, is_norm=args.norm)
             print("\n--- Extracted features from slide: %s seconds ---" % (time.time() - start_time))
             #########################
 
