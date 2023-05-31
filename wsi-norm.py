@@ -191,7 +191,7 @@ if __name__ == "__main__":
             #FEATURE EXTRACTION
             #measure time performance
             start_time = time.time()
-            if not zoom_list:
+            if "zoom_list" not in locals():
                 zoom_list = np.ones(len(coords_list)).tolist()
             extract_features_(model=model, model_name=model_name, norm_wsi_img=canny_norm_patch_list,
                                coords=coords_list, zoom=zoom_list, wsi_name=slide_name, outdir=feat_out_dir, cores=args.cores, is_norm=args.norm)

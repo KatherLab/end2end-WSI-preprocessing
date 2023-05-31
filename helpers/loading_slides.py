@@ -93,7 +93,7 @@ def get_raw_tile_list(I_shape: tuple, bg_reject_array: np.array, rejected_tile_a
 def process_slide_jpg(slide_jpg: PIL.Image, zoom=False):
     img_norm_wsi_jpg = PIL.Image.open(slide_jpg)
     image_array = np.array(img_norm_wsi_jpg)
-    zoom_levels = [1,2,4,16] # maybe add 8, maybe remove 16
+    zoom_levels = [1,2,4,8,16] # maybe add 8, maybe remove 16
     canny_norm_patch_list = []
     coords_list=[]
     zoom_list=[]
@@ -109,7 +109,7 @@ def process_slide_jpg(slide_jpg: PIL.Image, zoom=False):
                     patch = image_array[i:i+img_pxl, j:j+img_pxl, :]
                     # if patch is not fully black (i.e. rejected previously)
                     if z>1:
-                        if (np.count_nonzero(patch)/patch.size)>=min(1/4,1/z):
+                        if (np.count_nonzero(patch)/patch.size)>=min(1/4,4/z**2):
                             patch = ndimage.zoom(patch, (224 / patch.shape[0], 224 / patch.shape[1], 1))
                             canny_norm_patch_list.append(patch)
                             coords_list.append((i,j))
