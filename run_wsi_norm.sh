@@ -3,7 +3,7 @@
 
 ##### ONLY THINGS TO FILL IN
 # Default values, use absolute paths only!
-wsi_dir="wsi_samples/"                #path
+wsi_dir="/home/jeff/Downloads/test_qptiff/"                #path
 cache_dir="workspace/output/"         #path
 output_dir="output/"                  #path
 gpu_ids="1"                           #select GPU ID
