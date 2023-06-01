@@ -143,7 +143,7 @@ if __name__ == "__main__":
  
                 #measure time performance
                 start_time = time.time()
-                slide_array = load_slide(slide, args.cores)
+                slide_array = load_slide(slide, cores=args.cores)
                 if slide_array is None:
                     if args.del_slide:
                         print(f"Skipping slide and deleting {slide_url} due to missing MPP...")
