@@ -8,4 +8,4 @@ __maintainer__ = ["Jeff"]
 __email__ = "jiefu.zhu@tu-dresden.de"
 
 supported_extensions = {'svs', 'tif', 'vms', 'vmu',
-                        'ndpi', 'scn', 'mrxs', 'tiff', 'svslide', 'bif'}
+                        'ndpi', 'scn', 'mrxs', 'tiff', 'svslide', 'bif', 'qptiff'}

@@ -1,3 +1,4 @@
+import re
 from typing import Dict, Tuple
 from concurrent import futures
 import logging
@@ -5,6 +6,7 @@ import openslide
 from tqdm import tqdm
 import numpy as np
 import PIL
+from .exceptions import MPPExtractionError
 
 PIL.Image.MAX_IMAGE_PIXELS = None
 
@@ -24,17 +26,7 @@ def load_slide(slide: openslide.OpenSlide, target_mpp: float = 256/224, cores: i
     #     initial size
     steps = 8
     stride = np.ceil(np.array(slide.dimensions)/steps).astype(int)
-    try:
-        slide_mpp = float(slide.properties[openslide.PROPERTY_NAME_MPP_X])
-        print(f"Read slide MPP of {slide_mpp} from meta-data")
-    except KeyError:
-        #if it fails, then try out missing mpp handler
-        #TODO: create handlers for different image types
-        try:
-            slide_mpp = handle_missing_mpp(slide)
-        except:
-            print(f"Error: couldn't load MPP from slide!")
-            return None
+    slide_mpp = float(get_slide_mpp(slide))
     tile_target_size = np.round(stride*slide_mpp/target_mpp).astype(int)
     #changed max amount of threads used
     with futures.ThreadPoolExecutor(cores) as executor:
@@ -56,17 +48,42 @@ def load_slide(slide: openslide.OpenSlide, target_mpp: float = 256/224, cores: i
 
     return im
 
-def handle_missing_mpp(slide: openslide.OpenSlide) -> float:
-    logging.exception("Missing mpp in metadata of this file format, reading mpp from metadata")
+def get_slide_mpp(slide: openslide.OpenSlide) -> float:
+    try:
+        slide_mpp = float(slide.properties[openslide.PROPERTY_NAME_MPP_X])
+        print(f"Slide MPP successfully retrieved from metadata: {slide_mpp}")
+    except KeyError:
+        # Try out the missing MPP handlers
+        try:
+            slide_mpp = extract_mpp_from_comments(slide)
+            if slide_mpp:
+                print(f"MPP retrieved from comments after initial failure: {slide_mpp}")
+            else:
+                slide_mpp = extract_mpp_from_metadata(slide)
+                print(f"MPP re-matched from metadata after initial failure: {slide_mpp}")
+        except:
+            raise MPPExtractionError("MPP could not be loaded from the slide!")
+    return slide_mpp
+
+def extract_mpp_from_metadata(slide: openslide.OpenSlide) -> float:
+    logging.exception("MPP is missing in the metadata of this file format, attempting to extract from metadata...")
     import xml.dom.minidom as minidom
     xml_path = slide.properties['tiff.ImageDescription']
     doc = minidom.parseString(xml_path)
     collection = doc.documentElement
     images = collection.getElementsByTagName("Image")
     pixels = images[0].getElementsByTagName("Pixels")
-    #tile_size_px = um_per_tile / float(pixels[0].getAttribute("PhysicalSizeX"))
     mpp = float(pixels[0].getAttribute("PhysicalSizeX"))
     return mpp
+
+def extract_mpp_from_comments(slide: openslide.OpenSlide) -> float:
+    slide_properties = slide.properties.get('openslide.comment')
+    pattern = r'<PixelSizeMicrons>(.*?)</PixelSizeMicrons>'
+    match = re.search(pattern, slide_properties)
+    if match:
+        return match.group(1)
+    else:
+        return None
 
 def get_raw_tile_list(I_shape: tuple, bg_reject_array: np.array, rejected_tile_array: np.array, patch_shapes: np.array):
     canny_output_array=[]
