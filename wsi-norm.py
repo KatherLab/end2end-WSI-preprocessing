@@ -128,7 +128,7 @@ if __name__ == "__main__":
             # Load WSI as one image
             if (args.only_fex and (slide_jpg := slide_url).exists()) \
                 or (slide_jpg := slide_cache_dir/'norm_slide.jpg').exists():
-                canny_norm_patch_list, coords_list, zoom_list, patch_saved, total = process_slide_jpg(slide_jpg,zoom=args.zoom)
+                canny_norm_patch_list, coords_list, zoom_list, patch_saved, total = process_slide_jpg(slide_jpg, zoom=args.zoom, cores=args.cores)
                 print(f"Loaded {img_name}, {patch_saved}/{total} tiles remain")
             else:
                 logging.info(f"\nLoading {slide_name}")
