@@ -3,12 +3,12 @@
 
 ##### ONLY THINGS TO FILL IN
 # Default values, use absolute paths only!
-wsi_dir="wsi_samples/"                #path
-cache_dir="workspace/output/"         #path
-output_dir="output/"                  #path
-gpu_ids="1"                           #select GPU ID
-extract="ctranspath"                  #retccl or ctranspath
-model_file="mlcontext/ctranspath.pth" #path, downloaded with setup.sh
+wsi_dir="/scratch/ws/1/s1787956-tim-cpath/NUCIFORO-VHIO-BRCA-IMGS"
+cache_dir="/scratch/ws/1/s1787956-tim-cpath/NUCIFORO-VHIO-BRCA-IMGS/cache"
+output_dir="/scratch/ws/1/s1787956-tim-cpath/NUCIFORO-VHIO-BRCA-IMGS/features"
+gpu_ids="0"
+extract="ctranspath"
+model_file="mlcontext/ctranspath.pth"
 #####
 
 
@@ -55,4 +55,4 @@ python wsi-norm.py \
     --cache-dir "$cache_dir" \
     -o "$output_dir" \
     -m "$model_file" \
-    -e $extract
+    -e $extract --only-fex 

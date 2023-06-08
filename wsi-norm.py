@@ -167,12 +167,12 @@ if __name__ == "__main__":
                 #pass raw slide_array for getting the initial concentrations, bg_reject_array for actual normalisation
                 if norm:
                     logging.info(f"Normalising {slide_name}...")
-                    canny_img, img_norm_wsi_jpg, canny_norm_patch_list, coords_list = normalizer.transform(slide_array, bg_reject_array, rejected_tile_array, patch_shapes, cores=args.cores)
+                    canny_img, img_norm_wsi_jpg, canny_norm_patch_list, coords_list, zoom_list = normalizer.transform(slide_array, bg_reject_array, rejected_tile_array, patch_shapes, cores=args.cores)
                     print(f"\n--- Normalised slide {slide_name}: {(time.time() - start_time)} seconds ---")
                     img_norm_wsi_jpg.save(slide_jpg) #save WSI.svs -> WSI.jpg
 
                 else:
-                    canny_img, canny_norm_patch_list, coords_list = get_raw_tile_list(slide_array.shape, bg_reject_array, rejected_tile_array, patch_shapes)
+                    canny_img, canny_norm_patch_list, coords_list, zoom_list = get_raw_tile_list(slide_array.shape, bg_reject_array, rejected_tile_array, patch_shapes)
 
                 print("Saving Canny background rejected image...")
                 canny_img.save(f'{slide_cache_dir}/canny_slide.jpg')
@@ -191,8 +191,8 @@ if __name__ == "__main__":
             #FEATURE EXTRACTION
             #measure time performance
             start_time = time.time()
-            if "zoom_list" not in locals():
-                zoom_list = np.ones(len(coords_list)).tolist()
+            # if "zoom_list" not in locals():
+            #     zoom_list = np.ones(len(coords_list)).tolist()
             extract_features_(model=model, model_name=model_name, norm_wsi_img=canny_norm_patch_list,
                                coords=coords_list, zoom=zoom_list, wsi_name=slide_name, outdir=feat_out_dir, cores=args.cores, is_norm=args.norm)
             print("\n--- Extracted features from slide: %s seconds ---" % (time.time() - start_time))

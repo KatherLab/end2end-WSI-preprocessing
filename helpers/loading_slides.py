@@ -77,6 +77,7 @@ def get_raw_tile_list(I_shape: tuple, bg_reject_array: np.array, rejected_tile_a
 
     canny_img = PIL.Image.new("RGB", (I_shape[1], I_shape[0]))
     coords_list=[]
+    zoom_list = []
     i_range = range(I_shape[0]//patch_shapes[0][0])
     j_range = range(I_shape[1]//patch_shapes[0][1])
 
@@ -88,8 +89,9 @@ def get_raw_tile_list(I_shape: tuple, bg_reject_array: np.array, rejected_tile_a
             
             if not rejected_tile_array[idx]:
                 coords_list.append((j*patch_shapes[idx][1], i*patch_shapes[idx][0]))
+                zoom_list.append(1)
 
-    return canny_img, canny_output_array, coords_list
+    return canny_img, canny_output_array, coords_list, zoom_list
 
 def process_patch(patch, i, j, z):
     canny_norm_patch_list = []
@@ -130,7 +132,7 @@ def process_slide_jpg(slide_jpg: PIL.Image, zoom=False, cores=8):
                     patch = image_array[i:i + img_pxl, j:j + img_pxl, :]
                     patch_data.append((patch, i, j, z))
 
-            with multiprocessing.Pool(num_cores) as pool:
+            with multiprocessing.Pool(cores) as pool:
                 results = pool.starmap(process_patch, patch_data)
                 for result in results:
                     canny_norm_patch_list.extend(result[0])

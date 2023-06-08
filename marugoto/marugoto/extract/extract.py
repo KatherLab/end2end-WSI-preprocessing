@@ -123,6 +123,7 @@ def extract_features_(
         f['augmented'] = np.repeat(
             [False, True], [len(unaugmented_ds), len(augmented_ds)])
         assert len(f['feats']) == len(f['augmented'])
+        assert len(f["feats"]) == len(f["zoom"]), f"feature length ({len(f['feats'][:])}) should be equal to zoom length {len(f['zoom'][:])}!"  
         f.attrs['extractor'] = extractor_string
 
 

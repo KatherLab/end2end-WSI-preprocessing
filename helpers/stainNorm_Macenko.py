@@ -152,6 +152,7 @@ class Normalizer(object):
             canny_img = Image.new("RGB", (I_shape[1], I_shape[0]))
 
             coords_list=[]
+            zoom_list =  []
             i_range = range(I_shape[0]//patch_shapes[0][0])
             j_range = range(I_shape[1]//patch_shapes[0][1])
             for i in i_range:
@@ -171,6 +172,7 @@ class Normalizer(object):
                     #                                                             i*patch_shapes[idx][0]+patch_shapes[idx][0]))
                     if not rejected_list[idx]:
                         coords_list.append((j*patch_shapes[idx][1], i*patch_shapes[idx][0]))
+                        zoom_list.append(1)
 
 
             #output_img = np.uint8(reconstruct_from_patches_2d(np.array(output), I_shape))
@@ -188,7 +190,7 @@ class Normalizer(object):
             output_array = jit_output
             coords_list = None #TODO
 
-        return canny_img, output_img, canny_output_array, coords_list
+        return canny_img, output_img, canny_output_array, coords_list, zoom_list
 
 
     def hematoxylin(self, I):
