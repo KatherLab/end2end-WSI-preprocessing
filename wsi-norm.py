@@ -183,8 +183,6 @@ if __name__ == "__main__":
                     print(f"Deleting slide {slide_name} from local folder...")
                     os.remove(str(slide_url))
 
-                img_norm_wsi_jpg.save(slide_jpg) #save WSI.svs -> WSI.jpg
-
             print(f"Extracting {args.extractor} features from {slide_name}")
             #FEATURE EXTRACTION
             #measure time performance
