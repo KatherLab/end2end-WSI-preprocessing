@@ -19,6 +19,7 @@ parser = argparse.ArgumentParser(description='Convert .vsi files to .ome.tiff fi
 parser.add_argument('path_to_bftools', type=str, help='the path to the bfconvert tool')
 parser.add_argument('input_folder', type=str, help='the folder containing the .vsi files to convert')
 parser.add_argument('output_folder', type=str, help='the folder to save the converted .ome.tiff files')
+parser.add_argument('series', type=str, help='plane to extract')
 
 # Parse the command-line arguments
 args = parser.parse_args()
@@ -38,7 +39,7 @@ vsi_files = [filename for filename in vsi_files if os.path.basename(filename).sp
 # Define a function to run bfconvert command
 def convert_file(vsi_file):
     output_file = os.path.join(args.output_folder, ('.').join((os.path.basename(vsi_file).split('.'))[:-1]) + '.ome.tiff')
-    command = [os.path.join(args.path_to_bftools, 'bfconvert'), '-series', '6', vsi_file, output_file]
+    command = [os.path.join(args.path_to_bftools, 'bfconvert'), '-series', args.series, vsi_file, output_file]
     subprocess.run(command)
 
 if __name__ == '__main__':
