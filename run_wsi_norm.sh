@@ -3,9 +3,9 @@
 
 ##### ONLY THINGS TO FILL IN
 # Default values, use absolute paths only!
-wsi_dir="wsi_samples/"                #path
-cache_dir="workspace/output/"         #path
-output_dir="output/"                  #path
+wsi_dir="/scratch/ws/1/jizh551e-e2epipeline/data/MIHA_tiff/ChimioRadio/"                #path
+cache_dir="/scratch/ws/1/jizh551e-e2epipeline/data/cache_dir/ChimioRadio/"         #path
+output_dir="/scratch/ws/1/jizh551e-e2epipeline/data/output_dir/ChimioRadio/"                  #path
 gpu_ids="1"                           #select GPU ID
 extract="ctranspath"                  #retccl or ctranspath
 model_file="mlcontext/ctranspath.pth" #path, downloaded with setup.sh
