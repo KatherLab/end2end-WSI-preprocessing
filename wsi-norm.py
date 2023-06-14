@@ -50,7 +50,9 @@ if __name__ == '__main__':
     parser.add_argument('-d', '--del-slide', action='store_true', default=False,
                          help='Removing the original slide after processing.')
     parser.add_argument('--only-fex', action='store_true', default=False)
-
+    parser.add_argument('--target-mpp', type=float, default=256/224)
+    parser.add_argument('--base-pxl-size', type=int, default=224)
+    
     args = parser.parse_args()
 
 
@@ -128,7 +130,7 @@ if __name__ == "__main__":
             # Load WSI as one image
             if (args.only_fex and (slide_jpg := slide_url).exists()) \
                 or (slide_jpg := slide_cache_dir/'norm_slide.jpg').exists():
-                canny_norm_patch_list, coords_list, zoom_list, patch_saved, total = process_slide_jpg(slide_jpg, zoom=args.zoom, cores=args.cores)
+                canny_norm_patch_list, coords_list, zoom_list, patch_saved, total = process_slide_jpg(slide_jpg, zoom=args.zoom, cores=args.cores, base_pxl_size=args.base_pxl_size)
                 print(f"Loaded {img_name}, {patch_saved}/{total} tiles remain")
             else:
                 logging.info(f"\nLoading {slide_name}")
@@ -143,7 +145,7 @@ if __name__ == "__main__":
  
                 #measure time performance
                 start_time = time.time()
-                slide_array = load_slide(slide, cores=args.cores)
+                slide_array = load_slide(slide,target_mpp=args.target_mpp, cores=args.cores)
                 if slide_array is None:
                     if args.del_slide:
                         print(f"Skipping slide and deleting {slide_url} due to missing MPP...")

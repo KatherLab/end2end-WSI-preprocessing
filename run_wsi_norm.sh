@@ -4,8 +4,8 @@
 ##### ONLY THINGS TO FILL IN
 # Default values, use absolute paths only!
 wsi_dir="/scratch/ws/1/s1787956-tim-cpath/NUCIFORO-VHIO-BRCA-IMGS"
-cache_dir="/scratch/ws/1/s1787956-tim-cpath/NUCIFORO-VHIO-BRCA-IMGS/cache"
-output_dir="/scratch/ws/1/s1787956-tim-cpath/NUCIFORO-VHIO-BRCA-IMGS/features"
+cache_dir="/scratch/ws/1/s1787956-tim-cpath/NUCIFORO-VHIO-BRCA-IMGS/cache-unorm"
+output_dir="/scratch/ws/1/s1787956-tim-cpath/NUCIFORO-VHIO-BRCA-IMGS/features-unorm"
 gpu_ids="0"
 extract="ctranspath"
 model_file="mlcontext/ctranspath.pth"
@@ -55,4 +55,4 @@ python wsi-norm.py \
     --cache-dir "$cache_dir" \
     -o "$output_dir" \
     -m "$model_file" \
-    -e $extract --only-fex 
+    -e $extract --no-norm
