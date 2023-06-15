@@ -13,6 +13,7 @@ import os
 import numpy as np
 import openslide
 from tqdm import tqdm
+import fractions
 import PIL
 import cv2
 import time
@@ -50,7 +51,7 @@ if __name__ == '__main__':
     parser.add_argument('-d', '--del-slide', action='store_true', default=False,
                          help='Removing the original slide after processing.')
     parser.add_argument('--only-fex', action='store_true', default=False)
-    parser.add_argument('--target-mpp', type=float, default=256/224)
+    parser.add_argument('--target-mpp', type=str, default="256/224")
     parser.add_argument('--base-pxl-size', type=int, default=224)
     
     args = parser.parse_args()
@@ -92,6 +93,11 @@ if __name__ == "__main__":
     extractor = FeatureExtractor(args.extractor)
     model, model_name = extractor.init_feat_extractor(checkpoint_path=args.model)
 
+    if "/" in args.target_mpp:
+        args.target_mpp = float(args.target_mpp.split('/')[0]) / float(args.target_mpp.split('/')[1]) 
+    else:
+        args.target_mpp = float(args.target_mpp)
+    
     #create output feature folder, f.e.:
     #~/output_folder/E2E_macenko_xiyuewang-ctranspath/
     (args.output_path).mkdir(parents=True, exist_ok=True)
