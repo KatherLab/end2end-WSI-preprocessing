@@ -20,6 +20,7 @@ import time
 from datetime import timedelta
 from pathlib import Path
 import torch
+from scipy import ndimage
 from helpers import stainNorm_Macenko
 from helpers.common import supported_extensions
 from helpers.concurrent_canny_rejection import reject_background
@@ -98,6 +99,8 @@ if __name__ == "__main__":
     else:
         args.target_mpp = float(args.target_mpp)
     
+    print(f"Target MPP: {args.target_mpp:.6f}")
+    
     #create output feature folder, f.e.:
     #~/output_folder/E2E_macenko_xiyuewang-ctranspath/
     (args.output_path).mkdir(parents=True, exist_ok=True)
@@ -158,6 +161,9 @@ if __name__ == "__main__":
                         os.remove(str(slide_url))
                     continue
                 #save raw .svs jpg
+                if slide_array.shape[0] > 65500 or slide_array.shape[1] > 65500:
+                     slide_array = ndimage.zoom(slide_array, (min(65500,slide_array.shape[0]) / slide_array.shape[0],
+                                                              min(65500,slide_array.shape[1]) / slide_array.shape[1], 1))
                 (PIL.Image.fromarray(slide_array)).save(f'{slide_cache_dir}/slide.jpg')
 
                 #remove .SVS from memory
