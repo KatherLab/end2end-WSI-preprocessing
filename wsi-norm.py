@@ -174,7 +174,7 @@ if __name__ == "__main__":
 
                 #########################
                 #Do edge detection here and reject unnecessary tiles BEFORE normalisation
-                bg_reject_array, rejected_tile_array, patch_shapes = reject_background(img = slide_array, patch_size=(224,224), step=224, outdir=args.cache_dir, save_tiles=False, cores=args.cores)
+                bg_reject_array, rejected_tile_array, patch_shapes = reject_background(img = slide_array, patch_size=(args.base_pxl_size,args.base_pxl_size), step=args.base_pxl_size, outdir=args.cache_dir, save_tiles=False, cores=args.cores)
 
                 #measure time performance
                 start_time = time.time()
