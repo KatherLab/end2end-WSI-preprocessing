@@ -62,7 +62,8 @@ def get_slide_mpp(slide: openslide.OpenSlide) -> float:
                 slide_mpp = extract_mpp_from_metadata(slide)
                 print(f"MPP re-matched from metadata after initial failure: {slide_mpp}")
         except:
-            raise MPPExtractionError("MPP could not be loaded from the slide!")
+            slide_mpp = 0.3
+            #raise MPPExtractionError("MPP could not be loaded from the slide!")
     return slide_mpp
 
 def extract_mpp_from_metadata(slide: openslide.OpenSlide) -> float:
