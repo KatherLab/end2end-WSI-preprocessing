@@ -119,9 +119,8 @@ if __name__ == "__main__":
                     start=[])
         img_dir = np.random.permutation(img_dir).tolist()
     else:
-        img_dir = list(args.wsi_dir.glob(f'**/*/{img_name}'))
-        img_dir = np.random.permutation(img_dir).tolist()
-                       
+        img_dir = list(args.cache_dir.glob(f'**/*/{img_name}'))
+        img_dir = np.random.permutation(img_dir).tolist()                
     for slide_url in (progress := tqdm(img_dir, leave=False)):
         
         if not args.only_fex:
