@@ -8,7 +8,8 @@ import PIL
 import numpy as np
 import os
 from vits import vit_conv_base
-
+import timm
+from ctran import swin
 
 class FeatureExtractor:
     def __init__(self, model_type):
@@ -41,7 +42,32 @@ class FeatureExtractor:
             print("RetCCL model successfully initialised...")
             model_name='xiyuewang-retcll-931956f3'
             return model, model_name
+        
+        if self.model_type == 'pvt':
+            model = timm.create_model('pvt_v2_b2_li', pretrained=False) # 22.6M params # output states: 42M params
+            model.head = nn.Identity()
+            pvt = torch.load(checkpoint_path, map_location=torch.device('cpu'))
+            model.load_state_dict(pvt,strict=True)
 
+            if torch.cuda.is_available():
+                model = model.cuda()
+                
+            print(f"{self.model_type} model successfully initialised...")
+                
+            return model,self.model_type 
+        
+        if self.model_type == 'convnext':
+            model = timm.create_model('convnextv2_tiny', pretrained=False) # 22.6M params # output states: 42M params
+            model.head.fc = nn.Identity()
+            pvt = torch.load(checkpoint_path, map_location=torch.device('cpu'))
+            model.load_state_dict(pvt,strict=True)
+
+            if torch.cuda.is_available():
+                model = model.cuda()
+                
+            print(f"{self.model_type} model successfully initialised...")
+                
+            return model,self.model_type 
 
         elif self.model_type == 'ctranspath':
             assert sha256.hexdigest() == '7c998680060c8743551a412583fac689db43cec07053b72dfec6dcd810113539'
@@ -62,14 +88,23 @@ class FeatureExtractor:
         
         if 'swin' in self.model_type:
 
-            model = swin_tiny_patch4_window7_224(embed_layer=ConvStem, pretrained=False)
-            model.head = nn.Identity()
+            # model = swin_tiny_patch4_window7_224(embed_layer=ConvStem, pretrained=False)
+            # model.head = nn.Identity()
+        
 
-            state_dict = torch.load(checkpoint_path, map_location=torch.device('cpu'))
-            model.load_state_dict(state_dict, strict=True)
+            # state_dict = torch.load(checkpoint_path, map_location=torch.device('cpu'))
+            # model.load_state_dict(state_dict, strict=True)
+            # if torch.cuda.is_available():
+            #     model = model.cuda()
+
+            model = swin()
+            model.head = nn.Identity()
+            swin_chkpt = torch.load(checkpoint_path, map_location=torch.device('cpu'))
+            model.load_state_dict(swin_chkpt,strict=True)
+            
             if torch.cuda.is_available():
                 model = model.cuda()
-
+            
             print(f"{self.model_type} model successfully initialised...")
 
             return model, self.model_type

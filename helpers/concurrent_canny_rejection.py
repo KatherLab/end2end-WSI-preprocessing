@@ -50,7 +50,7 @@ Tuple[ndarray, ndarray, List[Any]]:
     begin = time.time()
     patches_shapes_list=[]
 
-    with futures.ThreadPoolExecutor(cores) as executor: #os.cpu_count()
+    with futures.ThreadPoolExecutor(cores//2) as executor: #os.cpu_count()
         future_coords: Dict[futures.Future, int] = {}
         i_range = range(img_shape[0]//patch_size[0])
         j_range = range(img_shape[1]//patch_size[1])

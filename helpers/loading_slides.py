@@ -102,12 +102,12 @@ def process_patch(patch, i, j, z, base_pxl_size=224):
         if (np.count_nonzero(patch) / patch.size) >= min(1 / 4, 4 / z ** 2):
             patch = ndimage.zoom(patch, (base_pxl_size / patch.shape[0], base_pxl_size / patch.shape[1], 1))
             canny_norm_patch_list.append(patch)
-            coords_list.append((i, j))
+            coords_list.append((j, i))
             zoom_list.append(z)
     else:
         if np.sum(patch) > 0:
             canny_norm_patch_list.append(patch)
-            coords_list.append((i, j))
+            coords_list.append((j, i))
             zoom_list.append(z)
 
     return canny_norm_patch_list, coords_list, zoom_list

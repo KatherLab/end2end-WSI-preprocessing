@@ -42,7 +42,7 @@ if __name__ == '__main__':
         help='Directory to store resulting slide JPGs.')
     parser.add_argument('-e', '--extractor', type=str, 
                         help='Feature extractor to use.')
-    parser.add_argument('-c', '--cores', type=int, default=8,
+    parser.add_argument('-c', '--cores', type=int, default=16,
                     help='CPU cores to use, 8 default.')
     parser.add_argument('-n','--norm', action='store_true')
     parser.add_argument('--no-norm', dest='norm', action='store_false')
@@ -112,7 +112,7 @@ if __name__ == "__main__":
     
     total_start_time = time.time()
     
-    img_name = "norm_slide.jpg" if args.norm else "canny_slide.jpg"
+    img_name = "norm_slide.png" if args.norm else "canny_slide.png"
     if not args.only_fex:
         img_dir = sum((list(args.wsi_dir.glob(f'**/*.{ext}'))
                     for ext in supported_extensions),
@@ -120,7 +120,8 @@ if __name__ == "__main__":
         img_dir = np.random.permutation(img_dir).tolist()
     else:
         img_dir = list(args.cache_dir.glob(f'**/*/{img_name}'))
-        img_dir = np.random.permutation(img_dir).tolist()                
+        img_dir = np.random.permutation(img_dir).tolist()     
+    print(f"Found {len(img_dir)} slildes")           
     for slide_url in (progress := tqdm(img_dir, leave=False)):
         
         if not args.only_fex:
@@ -159,14 +160,17 @@ if __name__ == "__main__":
                         print(f"Skipping slide and deleting {slide_url} due to missing MPP...")
                         os.remove(str(slide_url))
                     continue
-                #save raw .svs jpg
-                if slide_array.shape[0] > 65500 or slide_array.shape[1] > 65500:
-                     slide_array = ndimage.zoom(slide_array, (min(65500,slide_array.shape[0]) / slide_array.shape[0],
-                                                              min(65500,slide_array.shape[1]) / slide_array.shape[1], 1))
-                (PIL.Image.fromarray(slide_array)).save(f'{slide_cache_dir}/slide.jpg')
-
+                
+                #print(f"Saving slide...")
+                #(PIL.Image.fromarray(slide_array)).save(f'{slide_cache_dir}/slide.jpg')
                 #remove .SVS from memory
                 del slide
+                
+                
+                #if slide_array.shape[0] > 65500 or slide_array.shape[1] > 65500:
+                    #print(f"slide too big: {slide_array.shape}, Resizing to max jpg size...")
+                    # slide_array = ndimage.zoom(slide_array, (min(65500,slide_array.shape[0]) / slide_array.shape[0],
+                    #                                           min(65500,slide_array.shape[1]) / slide_array.shape[1], 1))
                 
                 print("\n--- Loaded slide: %s seconds ---" % (time.time() - start_time))
                 #########################
@@ -187,19 +191,22 @@ if __name__ == "__main__":
                 else:
                     canny_img, canny_norm_patch_list, coords_list, zoom_list = get_raw_tile_list(slide_array.shape, bg_reject_array, rejected_tile_array, patch_shapes)
 
-                print("Saving Canny background rejected image...")
-                canny_img.save(f'{slide_cache_dir}/canny_slide.jpg')
-                
                 #remove original slide jpg from memory
                 del slide_array
+                #del img_norm_wsi_jpg
+                del bg_reject_array
+                del rejected_tile_array
+                print("Saving Canny background rejected image...")
+                canny_img.save(f'{slide_cache_dir}/canny_slide.png')
                 
+
                 #optionally removing the original slide from harddrive
                 if args.del_slide:
                     print(f"Deleting slide {slide_name} from local folder...")
                     os.remove(str(slide_url))
 
                 #img_norm_wsi_jpg.save(slide_jpg) #save WSI.svs -> WSI.jpg
-
+                del canny_img
             print(f"Extracting {args.extractor} features from {slide_name}")
             #FEATURE EXTRACTION
             #measure time performance
@@ -209,6 +216,9 @@ if __name__ == "__main__":
             extract_features_(model=model, model_name=model_name, norm_wsi_img=canny_norm_patch_list,
                                coords=coords_list, zoom=zoom_list, wsi_name=slide_name, outdir=feat_out_dir, cores=args.cores, is_norm=args.norm)
             print("\n--- Extracted features from slide: %s seconds ---" % (time.time() - start_time))
+            del canny_norm_patch_list
+            del zoom_list
+            del coords_list
             #########################
 
         else:

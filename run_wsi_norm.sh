@@ -3,12 +3,12 @@
 
 ##### ONLY THINGS TO FILL IN
 # Default values, use absolute paths only!
-wsi_dir="/scratch/ws/1/s1787956-tim-cpath/NUCIFORO-VHIO-BRCA-IMGS"
-cache_dir="/scratch/ws/1/s1787956-tim-cpath/NUCIFORO-VHIO-BRCA-IMGS/cache-unorm"
-output_dir="/scratch/ws/1/s1787956-tim-cpath/NUCIFORO-VHIO-BRCA-IMGS/features-unorm"
-gpu_ids="0"
-extract="ctranspath"
-model_file="mlcontext/ctranspath.pth"
+wsi_dir="/mnt/bulk/timlenz/tumpe/TCGA-BRCA-DX-IMGS_1133/"
+cache_dir="/mnt/bulk/timlenz/tumpe/TCGA-BRCA-DX-IMGS_1133/cache-unorm"
+output_dir="/mnt/bulk/timlenz/tumpe/exp-arch/features-swin"
+gpu_ids="0" 
+extract="swin"
+model_file="/mnt/bulk/timlenz/tumpe/models/swin-moco-tcga-brca-512-exp-arch-e50.pth"
 #####
 
 
@@ -39,11 +39,11 @@ while getopts "hd:c:o:m:g:e:" opt; do
         ? ) usage; exit 1 ;;
     esac
 done
-if [ "$extract" = "ctranspath" ]; then
-    model_file="mlcontext/ctranspath.pth"
-elif [ "$extract" = "retccl" ]; then
-    model_file="mlcontext/best_ckpt.pth"
-fi
+# if [ "$extract" = "ctranspath" ]; then
+#     model_file="mlcontext/ctranspath.pth"
+# elif [ "$extract" = "retccl" ]; then
+#     model_file="mlcontext/best_ckpt.pth"
+# fi
 
 # Set CUDA_VISIBLE_DEVICES to specified GPU IDs
 echo "Using CUDA devices $gpu_ids"
@@ -55,4 +55,4 @@ python wsi-norm.py \
     --cache-dir "$cache_dir" \
     -o "$output_dir" \
     -m "$model_file" \
-    -e $extract --no-norm
+    -e $extract --target-mpp "0.5" --no-norm --only-fex

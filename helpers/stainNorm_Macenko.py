@@ -27,7 +27,18 @@ def v1v2_mult(V, minPhi, maxPhi):
     v2 = np.dot(V, np.array([np.cos(maxPhi), np.sin(maxPhi)]))
     return v1, v2
 
-def get_stain_matrix(I, beta=0.15, alpha=1):
+def sample_from_slide(bg_rejected,rejected_list,ratio=0.15,threshold=3000):
+    #I.shape?
+    
+    #return np.random.permutation(I[rejected_list==0,:,:])[:int(np.ceil(ratio*len(rejected_list[rejected_list==0])))]
+    #return I[:int(np.ceil(I.shape[0]*ratio)),:int(np.ceil(I.shape[1]*ratio))]
+    assert len(bg_rejected)==len(rejected_list), f"The lengths are unequal: {len(bg_rejected)=}!={len(rejected_list)=}"
+    print(f"number of non rejected tiles: {len(bg_rejected[rejected_list==0])}")
+    nr_samples = max(int(np.ceil(ratio*len(bg_rejected[rejected_list==0]))),threshold)
+    return np.random.default_rng(1337).permutation(bg_rejected[rejected_list==0])[:nr_samples]
+    
+    
+def get_stain_matrix(I, beta=0.15, alpha=1,rejected_list=None,sample=False):
     """
     Get stain matrix (2x3)
     :param I:
@@ -35,6 +46,9 @@ def get_stain_matrix(I, beta=0.15, alpha=1):
     :param alpha:
     :return:
     """
+    if sample:
+        I = sample_from_slide(I,rejected_list)
+    print(I.shape)
     OD = ut.RGB_to_OD(I).reshape((-1, 3))
     OD = (OD[(OD > beta).any(axis=1), :])
     _, V = np.linalg.eigh(np.cov(OD, rowvar=False))
@@ -46,7 +60,6 @@ def get_stain_matrix(I, beta=0.15, alpha=1):
     minPhi = np.percentile(phi, alpha)
     maxPhi = np.percentile(phi, 100 - alpha)
     v1, v2 = v1v2_mult(V, minPhi, maxPhi)
-
     if v1[0] > v2[0]:
         HE = np.array([v1, v2])
     else:
@@ -62,12 +75,12 @@ def get_stain_matrix(I, beta=0.15, alpha=1):
 
 ###
 @njit
-def transform_return(source_concentrations, stain_matrix_target, maxC_target, maxC_source, patch_shape):
+def transform_return(source_concentrations, stain_matrix_target, target_concentrations, patch_shape):
+    maxC_source = np.percentile(source_concentrations, 99, axis=0).reshape((1, 2))
+    maxC_target = np.percentile(target_concentrations, 99, axis=0).reshape((1, 2))
     source_concentrations *= (maxC_target / maxC_source)
     return (255 * np.exp(-1 * np.dot(source_concentrations, stain_matrix_target).reshape(patch_shape))).astype(
         np.uint8)
-
-
 
 @njit
 def hematoxalin_return(source_concentrations, h, w):
@@ -75,10 +88,9 @@ def hematoxalin_return(source_concentrations, h, w):
     H = np.exp(-1 * H)
     return H
 
+
 def concurrent_concXstain(self, source_concentrations, patch_shapes, idx):
-    maxC_source = np.percentile(source_concentrations, 99, axis=0).reshape((1, 2))
-    maxC_target = np.percentile(self.target_concentrations, 99, axis=0).reshape((1, 2))
-    jit_output = transform_return(source_concentrations, self.stain_matrix_target, maxC_target, maxC_source, patch_shapes[idx]) 
+    jit_output = transform_return(source_concentrations, self.stain_matrix_target,self.target_concentrations, patch_shapes[idx]) 
     return(jit_output)
 
 from PIL import Image
@@ -94,8 +106,8 @@ class Normalizer(object):
         self.target_concentrations = None
 
     def fit(self, target):
-        target = ut.standardize_brightness(target)
-        self.stain_matrix_target = get_stain_matrix(target)
+        #target = ut.standardize_brightness(target)
+        self.stain_matrix_target = get_stain_matrix(target,sample=False)
         self.target_concentrations = ut.get_concentrations_target(target, self.stain_matrix_target)
 
     def target_stains(self):
@@ -104,18 +116,18 @@ class Normalizer(object):
 
     def transform(self, og_img: np.array, bg_rejected_img: np.array, rejected_list: np.array, patch_shapes: list, cores: int=8): #TODO: add optional split, patch sizes, overlap
         begin = time.time()
-        I = ut.standardize_brightness(og_img)
+        #I = ut.standardize_brightness(og_img)
         after_sb = time.time()
         print(f'Standardized brightness: {after_sb-begin}')
-        stain_matrix_source = get_stain_matrix(I)
+        stain_matrix_source = get_stain_matrix(bg_rejected_img,rejected_list=rejected_list,sample=True)
         after_sm = time.time()
         print(f'Get stain matrix: {after_sm-begin}')
-        I_shape = I.shape
+        I_shape = og_img.shape
         source_concentrations_list = ut.get_concentrations_source(bg_rejected_img, I_shape, stain_matrix_source, rejected_list)
         after_conc = time.time()
         print(f'\nGet concentrations (normalisation): {after_conc-after_sm}')
 
-        del I, stain_matrix_source
+        del og_img, stain_matrix_source
 
         split=True
         if split:
