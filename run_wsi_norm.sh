@@ -4,11 +4,11 @@
 ##### ONLY THINGS TO FILL IN
 # Default values, use absolute paths only!
 wsi_dir="/mnt/bulk/timlenz/tumpe/TCGA-BRCA-DX-IMGS_1133/"
-cache_dir="/mnt/bulk/timlenz/tumpe/TCGA-BRCA-DX-IMGS_1133/cache-unorm"
-output_dir="/mnt/bulk/timlenz/tumpe/exp-arch/features-swin"
+cache_dir="/mnt/bulk/timlenz/tumpe/TCGA-BRCA-DX-IMGS_1133/cache-05"
+output_dir="/mnt/bulk/timlenz/tumpe/features-brca-norm-05-ctp"
 gpu_ids="0" 
-extract="swin"
-model_file="/mnt/bulk/timlenz/tumpe/models/swin-moco-tcga-brca-512-exp-arch-e50.pth"
+extract="ctranspath"
+model_file="/mnt/bulk/timlenz/tumpe/models/ctranspath.pth"
 #####
 
 
@@ -55,4 +55,4 @@ python wsi-norm.py \
     --cache-dir "$cache_dir" \
     -o "$output_dir" \
     -m "$model_file" \
-    -e $extract --target-mpp "0.5" --no-norm --only-fex
+    -e $extract --target-mpp "0.5" --base-pxl-size 512

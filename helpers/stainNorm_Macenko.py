@@ -114,7 +114,7 @@ class Normalizer(object):
         return ut.OD_to_RGB(self.stain_matrix_target)
 
 
-    def transform(self, og_img: np.array, bg_rejected_img: np.array, rejected_list: np.array, patch_shapes: list, cores: int=8): #TODO: add optional split, patch sizes, overlap
+    def transform(self, og_img: np.array, bg_rejected_img: np.array, rejected_list: np.array, patch_shapes: list, patch_size: int, cores: int=8): #TODO: add optional split, patch sizes, overlap
         begin = time.time()
         #I = ut.standardize_brightness(og_img)
         after_sb = time.time()
@@ -123,7 +123,7 @@ class Normalizer(object):
         after_sm = time.time()
         print(f'Get stain matrix: {after_sm-begin}')
         I_shape = og_img.shape
-        source_concentrations_list = ut.get_concentrations_source(bg_rejected_img, I_shape, stain_matrix_source, rejected_list)
+        source_concentrations_list = ut.get_concentrations_source(bg_rejected_img, I_shape, stain_matrix_source, rejected_list,patch_size,cores)
         after_conc = time.time()
         print(f'\nGet concentrations (normalisation): {after_conc-after_sm}')
 
@@ -142,7 +142,7 @@ class Normalizer(object):
                         concurrent_concXstain, self, source_concentrations=source_concentrations, patch_shapes=patch_shapes, idx=i)
                         future_coords[future] = i
                 
-                norm_img_patches_list = np.zeros((len(source_concentrations_list), 224, 224, 3), dtype=np.uint8)
+                norm_img_patches_list = np.zeros((len(source_concentrations_list), patch_size, patch_size, 3), dtype=np.uint8)
                 for tile_future in tqdm(futures.as_completed(future_coords), total=len(source_concentrations_list)-len(rejected_list), desc='Concentrations x Stain', leave=False):
                     i = future_coords[tile_future]
                     patch = tile_future.result()

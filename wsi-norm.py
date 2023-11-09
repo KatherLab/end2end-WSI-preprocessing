@@ -184,7 +184,7 @@ if __name__ == "__main__":
                 #pass raw slide_array for getting the initial concentrations, bg_reject_array for actual normalisation
                 if norm:
                     logging.info(f"Normalising {slide_name}...")
-                    canny_img, img_norm_wsi_jpg, canny_norm_patch_list, coords_list, zoom_list = normalizer.transform(slide_array, bg_reject_array, rejected_tile_array, patch_shapes, cores=args.cores)
+                    canny_img, img_norm_wsi_jpg, canny_norm_patch_list, coords_list, zoom_list = normalizer.transform(slide_array, bg_reject_array, rejected_tile_array, patch_shapes,args.base_pxl_size, cores=args.cores)
                     print(f"\n--- Normalised slide {slide_name}: {(time.time() - start_time)} seconds ---")
                     img_norm_wsi_jpg.save(slide_jpg) #save WSI.svs -> WSI.jpg
 

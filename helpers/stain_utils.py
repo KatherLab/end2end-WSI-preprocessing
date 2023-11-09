@@ -202,7 +202,7 @@ def transform_return(source_concentrations, stain_matrix_target, maxC_target, ma
         np.uint8)
 
 
-@njit
+#@njit
 def get_concentrations_target(I, stain_matrix, lamda=0.01):
     """
     Get concentrations, a npix x 2 matrix
@@ -216,7 +216,7 @@ def get_concentrations_target(I, stain_matrix, lamda=0.01):
         temp, _, _, _ = np.linalg.lstsq(stain_matrix.T, OD.T, rcond=None)
         temp=temp.T
     except Exception as e:
-        print(e)
+        print(f"Exception occured in the function get_concentrations_target: {e}")
         temp = None
     return temp
 
@@ -243,7 +243,7 @@ from tqdm import tqdm
 from typing import Dict, Tuple
 import os
 
-def get_concentrations_source(I, I_shape, stain_matrix, rejection_list, lamda=0.01):
+def get_concentrations_source(I, I_shape, stain_matrix, rejection_list, patch_size=224, cores=12, lamda=0.01):
     """
     Split the image I into big patches, loop over them, to OD + reshape, norm, reshape to I
     and in the end stitch the big patches together for the entire image again
@@ -263,17 +263,17 @@ def get_concentrations_source(I, I_shape, stain_matrix, rejection_list, lamda=0.
 
     if True: #(I_shape[0] + I_shape[1]) > (224*2): #bigger than 30k edge pixels combined, i.e. 15k x 15k
         #x = 500 # 2 for largest possible blocks
-        x=(I_shape[0]//224)*(I_shape[1]//224)
+        x=(I_shape[0]//patch_size)*(I_shape[1]//patch_size)
         #print(f'Splitting WSI into {x*x} for normalisation...')
         print(f"Normalising {np.sum(~rejection_list)} tiles...")
         # print("Going into RGB->OD and spams Lasso function...")
-        patches_shape = (224, 224) #(I_shape[0]//x, I_shape[1]//x)
+        patches_shape = (patch_size, patch_size) #(I_shape[0]//x, I_shape[1]//x)
         # patches = []
 
         patch_list =[]
         begin_time_list = []
 	    #changed maximum threads from 32 to os.cpu_count()
-        with futures.ThreadPoolExecutor(16) as executor: #os.cpu_count()
+        with futures.ThreadPoolExecutor(cores) as executor: #os.cpu_count()
             future_coords: Dict[futures.Future, int] = {}
             i_range = range(I_shape[0]//patches_shape[0])
             j_range = range(I_shape[1]//patches_shape[1])
@@ -289,7 +289,7 @@ def get_concentrations_source(I, I_shape, stain_matrix, rejection_list, lamda=0.
                         future_coords[future] = i*len(j_range) + j # index 0 - 3. (0,0) = 0, (0,1) = 1, (1,0) = 2, (1,1) = 3
 
             #patch_list = np.zeros((x*x, I_shape[0]//x*I_shape[1]//x, 2), dtype=np.float64)
-            patch_list = np.zeros((x, 224*224, 2), dtype=np.float64)
+            patch_list = np.zeros((x, patch_size*patch_size, 2), dtype=np.float64)
             for tile_future in tqdm(futures.as_completed(future_coords), total=np.sum(~rejection_list), desc='Normalising tiles', leave=False):
                 i = future_coords[tile_future]
                 #print(f'Received normalised patch #{i} from thread in {time.time()-begin_time_list[i]} seconds')
