@@ -74,7 +74,7 @@ def get_stain_matrix(I, beta=0.15, alpha=1,rejected_list=None,sample=False):
 
 
 ###
-@njit
+#@njit
 def transform_return(source_concentrations, stain_matrix_target, target_concentrations, patch_shape):
     maxC_source = np.percentile(source_concentrations, 99, axis=0).reshape((1, 2))
     maxC_target = np.percentile(target_concentrations, 99, axis=0).reshape((1, 2))
