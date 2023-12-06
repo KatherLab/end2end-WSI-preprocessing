@@ -25,6 +25,7 @@ from helpers.concurrent_canny_rejection import reject_background
 from helpers.loading_slides import process_slide_jpg, load_slide, get_raw_tile_list
 from helpers.feature_extractors import FeatureExtractor
 from marugoto.marugoto.extract.extract import extract_features_
+from random import shuffle
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
@@ -106,7 +107,9 @@ if __name__ == "__main__":
                     start=[])
     else:
         img_dir = list(args.wsi_dir.glob(f'**/*/{img_name}'))
-                       
+
+    # shuffle the slides around to make parallelizing a bit easier
+    shuffle(img_dir)                   
     for slide_url in (progress := tqdm(img_dir, leave=False)):
         
         if not args.only_fex:
