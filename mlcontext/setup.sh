@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -eux
+
 # get the directory of the script
 script_dir=$(realpath "$(dirname "${0}")")
 
@@ -37,8 +39,8 @@ fi
 retccl_model="$script_dir/best_ckpt.pth"
 ctranspath="$script_dir/ctranspath.pth"
 # check if the model file exists
-if [ -f "$model" ]; then
-  echo "Model file already exists."
+if [ -f "$retccl_model" -a -f "$ctranspath" ]; then
+  echo "Model files already exists."
 else
   # if not, download the model file using gdown
   echo "Downloading model file..."
